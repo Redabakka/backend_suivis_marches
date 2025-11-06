@@ -1,17 +1,9 @@
 package uir.ac.ma.suivi_marches.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import uir.ac.ma.suivi_marches.model.Tache;
 
-import java.util.List;
 
-public interface TacheRepo {
-    List<Tache> getAllTache();
+public interface TacheRepo extends JpaRepository<Tache, Integer> {
 
-    Tache getTacheById(int idTache);
-
-    void addTache(Tache tache);
-
-    void modifyTache(Tache tache);
-
-    void deleteTache(int idTache);
 }

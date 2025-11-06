@@ -1,17 +1,9 @@
 package uir.ac.ma.suivi_marches.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import uir.ac.ma.suivi_marches.model.Notification;
 
-import java.util.List;
 
-public interface NotificationRepo {
-    List<Notification> getAllNotification();
+public interface NotificationRepo extends JpaRepository<Notification, Integer> {
 
-    Notification getNotificationById(int idNotification);
-
-    void addNotification(Notification notification);
-
-    void modifyNotification(Notification notification);
-
-    void deleteNotification(int idNotification);
 }

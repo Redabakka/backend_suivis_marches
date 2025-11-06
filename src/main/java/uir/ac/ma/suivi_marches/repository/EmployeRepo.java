@@ -1,18 +1,9 @@
 package uir.ac.ma.suivi_marches.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import uir.ac.ma.suivi_marches.model.Employe;
 
-import java.util.List;
 
-public interface EmployeRepo {
-    List<Employe> getAllEmploye();
-
-    Employe getEmployeById(int idEmploye);
-
-    void addEmploye(Employe employe);
-
-    void modifyEmploye(Employe employe);
-
-    void deleteEmploye(int idEmploye);
+public interface EmployeRepo extends JpaRepository<Employe, Integer> {
 
 }

@@ -1,17 +1,9 @@
 package uir.ac.ma.suivi_marches.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import uir.ac.ma.suivi_marches.model.Commentaire;
 
-import java.util.List;
 
-public interface CommentaireRepo {
-    List<Commentaire> getAllCommentaire();
+public interface CommentaireRepo extends JpaRepository<Commentaire, Integer> {
 
-    Commentaire getCommentaireById(int idCommentaire);
-
-    void addCommentaire(Commentaire commentaire);
-
-    void modifyCommentaire(Commentaire commentaire);
-
-    void deleteCommentaire(int idCommentaire);
 }

@@ -1,18 +1,9 @@
 package uir.ac.ma.suivi_marches.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import uir.ac.ma.suivi_marches.model.Marche;
 
-import java.util.List;
 
-public interface MarcheRepo {
-    List<Marche> getAllMarche();
-
-    Marche getMarcheById(int idMarche);
-
-    void addMarche(Marche marche);
-
-    void modifyMarche(Marche marche);
-
-    void deleteMarche(int idMarche);
+public interface MarcheRepo extends JpaRepository<Marche, Integer> {
 
 }
