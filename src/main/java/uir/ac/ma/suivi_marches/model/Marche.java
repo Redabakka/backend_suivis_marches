@@ -1,8 +1,8 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-public class marche {
+public class Marche {
     private int id_marche;
     private String intitule;
     private String objectif;
@@ -15,9 +15,9 @@ public class marche {
     private int created_by;           // clé étrangère vers employe
     private LocalDateTime created_at;
 
-    public marche() {}
+    public Marche() {}
 
-    public marche(int id_marche, String intitule, String objectif, double budget_estime,
+    public Marche(int id_marche, String intitule, String objectif, double budget_estime,
                   LocalDate date_debut, LocalDate date_fin, String statut,
                   int id_service, String fichier_cps_path, int created_by, LocalDateTime created_at) {
         this.id_marche = id_marche;

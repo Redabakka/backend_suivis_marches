@@ -1,14 +1,14 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 
-public class service {
+public class Service {
     private int id_service;
     private String nom;
     private String description;
     private boolean actif;
 
-    public service() {}
+    public Service() {}
 
-    public service(int id_service, String nom, String description, boolean actif) {
+    public Service(int id_service, String nom, String description, boolean actif) {
         this.id_service = id_service;
         this.nom = nom;
         this.description = description;

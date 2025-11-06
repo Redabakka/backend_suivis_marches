@@ -1,7 +1,7 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 import java.time.LocalDateTime;
 
-public class notification {
+public class Notification {
     private int id_notification;
     private int id_employe;      // clé étrangère vers employe
     private String type;         // type de notification
@@ -9,9 +9,9 @@ public class notification {
     private boolean lu;          // statut de lecture
     private LocalDateTime date_envoi;
 
-    public notification() {}
+    public Notification() {}
 
-    public notification(int id_notification, int id_employe, String type,
+    public Notification(int id_notification, int id_employe, String type,
                         String message, boolean lu, LocalDateTime date_envoi) {
         this.id_notification = id_notification;
         this.id_employe = id_employe;

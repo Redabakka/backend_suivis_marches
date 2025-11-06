@@ -1,8 +1,8 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class tache {
+public class Tache {
     private int id_tache;
     private int id_marche;          // clé étrangère vers la table marche
     private String titre;
@@ -17,9 +17,9 @@ public class tache {
     private String pertinence;      // Pertinente / Non pertinente / À revoir
     private LocalDateTime created_at;
 
-    public tache() {}
+    public Tache() {}
 
-    public tache(int id_tache, int id_marche, String titre, String description,
+    public Tache(int id_tache, int id_marche, String titre, String description,
                  LocalDate date_debut, LocalDate date_fin, int duree_estimee,
                  int responsable, String etat, String priorite,
                  boolean critique, String pertinence, LocalDateTime created_at) {

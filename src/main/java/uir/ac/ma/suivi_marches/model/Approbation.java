@@ -1,7 +1,7 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 import java.time.LocalDateTime;
 
-public class approbation {
+public class Approbation {
     private int id_approbation;
     private int id_marche;       // clé étrangère vers marche
     private int id_employe;      // clé étrangère vers employe
@@ -9,9 +9,9 @@ public class approbation {
     private String motif;        // justification si refusé
     private LocalDateTime created_at;
 
-    public approbation() {}
+    public Approbation() {}
 
-    public approbation(int id_approbation, int id_marche, int id_employe,
+    public Approbation(int id_approbation, int id_marche, int id_employe,
                        String statut, String motif, LocalDateTime created_at) {
         this.id_approbation = id_approbation;
         this.id_marche = id_marche;

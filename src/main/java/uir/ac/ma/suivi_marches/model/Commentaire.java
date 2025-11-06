@@ -1,7 +1,7 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 import java.time.LocalDateTime;
 
-public class commantaire {
+public class Commentaire {
     private int id_commentaire;
     private int id_tache;         // clé étrangère vers la table tache
     private int id_auteur;        // clé étrangère vers la table employe
@@ -9,9 +9,9 @@ public class commantaire {
     private String priorite;      // Urgent / Quotidien / Informatif
     private LocalDateTime created_at;
 
-    public commantaire() {}
+    public Commentaire() {}
 
-    public commantaire(int id_commentaire, int id_tache, int id_auteur,
+    public Commentaire(int id_commentaire, int id_tache, int id_auteur,
                        String contenu, String priorite, LocalDateTime created_at) {
         this.id_commentaire = id_commentaire;
         this.id_tache = id_tache;

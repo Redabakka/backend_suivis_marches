@@ -1,4 +1,4 @@
-package uir.ac.ma.suivi_marches.Model;
+package uir.ac.ma.suivi_marches.model;
 
 import java.time.LocalDateTime;
 
