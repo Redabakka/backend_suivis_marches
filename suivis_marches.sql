@@ -2,6 +2,23 @@
 -- Drop order (for dev only)
 -- DROP TABLE IF EXISTS notification, signalement, approbation, commentaire, tache, marche, employe, service CASCADE;
 
+
+-- Table unique d'authentification + rôle (simplifiée)
+CREATE TABLE IF NOT EXISTS utilisateur (
+                                           id_user SERIAL PRIMARY KEY,
+                                           id_employe INT UNIQUE REFERENCES employe(id_employe)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL,
+    username VARCHAR(80) NOT NULL UNIQUE,
+    password_hash VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('Admin','Chef','Employe'))
+    );
+
+-- Index utiles
+CREATE INDEX IF NOT EXISTS idx_user_username ON utilisateur(username);
+CREATE INDEX IF NOT EXISTS idx_user_role ON utilisateur(role);
+
+
 CREATE TABLE service (
                          id_service SERIAL PRIMARY KEY,
                          nom VARCHAR(100) NOT NULL,
