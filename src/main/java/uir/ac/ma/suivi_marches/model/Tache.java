@@ -1,27 +1,60 @@
 package uir.ac.ma.suivi_marches.model;
+
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+@Entity
+@Table(name = "tache")
 public class Tache {
-    private int id_tache;
-    private int id_marche;          // clé étrangère vers la table marche
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_tache")
+    private Integer id_tache;
+
+    @Column(name = "id_marche", nullable = false)
+    private Integer id_marche;
+
+    @Column(name = "titre", nullable = false, length = 255)
     private String titre;
+
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "date_debut")
     private LocalDate date_debut;
+
+    @Column(name = "date_fin")
     private LocalDate date_fin;
-    private int duree_estimee;
-    private int responsable;        // clé étrangère vers employe
-    private String etat;            // En attente / En cours / Validée / Non validée
-    private String priorite;        // Urgent / Quotidien / Informatif
-    private boolean critique;
-    private String pertinence;      // Pertinente / Non pertinente / À revoir
-    private LocalDateTime created_at;
+
+    @Column(name = "duree_estimee", nullable = false)
+    private Integer duree_estimee;
+
+    @Column(name = "responsable", nullable = false)
+    private Integer responsable; // id employe
+
+    @Column(name = "etat", nullable = false, length = 20)
+    private String etat;
+
+    @Column(name = "priorite", nullable = false, length = 20)
+    private String priorite;
+
+    @Column(name = "critique", nullable = false)
+    private boolean critique = false;
+
+    @Column(name = "pertinence", nullable = false, length = 20)
+    private String pertinence;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime created_at = LocalDateTime.now();
 
     public Tache() {}
 
-    public Tache(int id_tache, int id_marche, String titre, String description,
-                 LocalDate date_debut, LocalDate date_fin, int duree_estimee,
-                 int responsable, String etat, String priorite,
+    public Tache(Integer id_tache, Integer id_marche, String titre, String description,
+                 LocalDate date_debut, LocalDate date_fin, Integer duree_estimee,
+                 Integer responsable, String etat, String priorite,
                  boolean critique, String pertinence, LocalDateTime created_at) {
         this.id_tache = id_tache;
         this.id_marche = id_marche;
@@ -38,12 +71,12 @@ public class Tache {
         this.created_at = created_at;
     }
 
-    // Getters et Setters
-    public int getId_tache() { return id_tache; }
-    public void setId_tache(int id_tache) { this.id_tache = id_tache; }
+    // Getters / Setters
+    public Integer getId_tache() { return id_tache; }
+    public void setId_tache(Integer id_tache) { this.id_tache = id_tache; }
 
-    public int getId_marche() { return id_marche; }
-    public void setId_marche(int id_marche) { this.id_marche = id_marche; }
+    public Integer getId_marche() { return id_marche; }
+    public void setId_marche(Integer id_marche) { this.id_marche = id_marche; }
 
     public String getTitre() { return titre; }
     public void setTitre(String titre) { this.titre = titre; }
@@ -57,11 +90,11 @@ public class Tache {
     public LocalDate getDate_fin() { return date_fin; }
     public void setDate_fin(LocalDate date_fin) { this.date_fin = date_fin; }
 
-    public int getDuree_estimee() { return duree_estimee; }
-    public void setDuree_estimee(int duree_estimee) { this.duree_estimee = duree_estimee; }
+    public Integer getDuree_estimee() { return duree_estimee; }
+    public void setDuree_estimee(Integer duree_estimee) { this.duree_estimee = duree_estimee; }
 
-    public int getResponsable() { return responsable; }
-    public void setResponsable(int responsable) { this.responsable = responsable; }
+    public Integer getResponsable() { return responsable; }
+    public void setResponsable(Integer responsable) { this.responsable = responsable; }
 
     public String getEtat() { return etat; }
     public void setEtat(String etat) { this.etat = etat; }
@@ -78,4 +111,13 @@ public class Tache {
     public LocalDateTime getCreated_at() { return created_at; }
     public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tache t)) return false;
+        return id_tache != null && id_tache.equals(t.id_tache);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hashCode(id_tache); }
 }

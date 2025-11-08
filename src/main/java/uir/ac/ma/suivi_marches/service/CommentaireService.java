@@ -1,10 +1,10 @@
-package uir.ac.ma.suivi_marches.service;
+package uir.ac.ma.suivi_marches.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uir.ac.ma.suivi_marches.model.Commentaire;
-import uir.ac.ma.suivi_marches.repository.CommentaireRepo;
+import uir.ac.ma.suivi_marches.Repository.CommentaireRepo;
 
 import java.util.List;
 import java.util.Optional;

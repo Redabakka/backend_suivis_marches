@@ -1,43 +1,83 @@
 package uir.ac.ma.suivi_marches.model;
-import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.Objects;
+
+@Entity
+@Table(name = "commentaire")
 public class Commentaire {
-    private int id_commentaire;
-    private int id_tache;         // clé étrangère vers la table tache
-    private int id_auteur;        // clé étrangère vers la table employe
-    private String contenu;       // texte du commentaire
-    private String priorite;      // Urgent / Quotidien / Informatif
-    private LocalDateTime created_at;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_commentaire")
+    private Integer id_commentaire;
+
+    // --- Relations ---
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_tache", nullable = false, foreignKey = @ForeignKey(name = "fk_commentaire_tache"))
+    private Tache tache;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_auteur", nullable = false, foreignKey = @ForeignKey(name = "fk_commentaire_employe"))
+    private Employe auteur;
+
+    @Column(name = "contenu", nullable = false, length = 2000)
+    private String contenu;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "priorite", nullable = false, length = 20)
+    private Priorite priorite; // Urgent / Quotidien / Informatif
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime created_at = LocalDateTime.now();
+
+    public enum Priorite {
+        URGENT,
+        QUOTIDIEN,
+        INFORMATIF
+    }
 
     public Commentaire() {}
 
-    public Commentaire(int id_commentaire, int id_tache, int id_auteur,
-                       String contenu, String priorite, LocalDateTime created_at) {
+    public Commentaire(Integer id_commentaire, Tache tache, Employe auteur,
+                       String contenu, Priorite priorite, LocalDateTime created_at) {
         this.id_commentaire = id_commentaire;
-        this.id_tache = id_tache;
-        this.id_auteur = id_auteur;
+        this.tache = tache;
+        this.auteur = auteur;
         this.contenu = contenu;
         this.priorite = priorite;
         this.created_at = created_at;
     }
 
-    // Getters et Setters
-    public int getId_commentaire() { return id_commentaire; }
-    public void setId_commentaire(int id_commentaire) { this.id_commentaire = id_commentaire; }
+    // --- Getters & Setters ---
+    public Integer getId_commentaire() { return id_commentaire; }
+    public void setId_commentaire(Integer id_commentaire) { this.id_commentaire = id_commentaire; }
 
-    public int getId_tache() { return id_tache; }
-    public void setId_tache(int id_tache) { this.id_tache = id_tache; }
+    public Tache getTache() { return tache; }
+    public void setTache(Tache tache) { this.tache = tache; }
 
-    public int getId_auteur() { return id_auteur; }
-    public void setId_auteur(int id_auteur) { this.id_auteur = id_auteur; }
+    public Employe getAuteur() { return auteur; }
+    public void setAuteur(Employe auteur) { this.auteur = auteur; }
 
     public String getContenu() { return contenu; }
     public void setContenu(String contenu) { this.contenu = contenu; }
 
-    public String getPriorite() { return priorite; }
-    public void setPriorite(String priorite) { this.priorite = priorite; }
+    public Priorite getPriorite() { return priorite; }
+    public void setPriorite(Priorite priorite) { this.priorite = priorite; }
 
     public LocalDateTime getCreated_at() { return created_at; }
     public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Commentaire c)) return false;
+        return id_commentaire != null && id_commentaire.equals(c.id_commentaire);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id_commentaire);
+    }
 }

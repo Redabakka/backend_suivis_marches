@@ -1,9 +1,9 @@
-package uir.ac.ma.suivi_marches.service;
+package uir.ac.ma.suivi_marches.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uir.ac.ma.suivi_marches.repository.ServiceRepo;
+import uir.ac.ma.suivi_marches.Repository.ServiceRepo;
 
 import java.util.List;
 import java.util.Optional;
