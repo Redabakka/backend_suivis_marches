@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -38,7 +39,8 @@ public class Commentaire {
         INFORMATIF
     }
 
-    public Commentaire() {}
+    public Commentaire() {
+    }
 
     public Commentaire(Integer id_commentaire, Tache tache, Employe auteur,
                        String contenu, Priorite priorite, LocalDateTime created_at) {
@@ -51,23 +53,53 @@ public class Commentaire {
     }
 
     // --- Getters & Setters ---
-    public Integer getId_commentaire() { return id_commentaire; }
-    public void setId_commentaire(Integer id_commentaire) { this.id_commentaire = id_commentaire; }
+    public Integer getId_commentaire() {
+        return id_commentaire;
+    }
 
-    public Tache getTache() { return tache; }
-    public void setTache(Tache tache) { this.tache = tache; }
+    public void setId_commentaire(Integer id_commentaire) {
+        this.id_commentaire = id_commentaire;
+    }
 
-    public Employe getAuteur() { return auteur; }
-    public void setAuteur(Employe auteur) { this.auteur = auteur; }
+    public Tache getTache() {
+        return tache;
+    }
 
-    public String getContenu() { return contenu; }
-    public void setContenu(String contenu) { this.contenu = contenu; }
+    public void setTache(Tache tache) {
+        this.tache = tache;
+    }
 
-    public Priorite getPriorite() { return priorite; }
-    public void setPriorite(Priorite priorite) { this.priorite = priorite; }
+    public Employe getAuteur() {
+        return auteur;
+    }
 
-    public LocalDateTime getCreated_at() { return created_at; }
-    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+    public void setAuteur(Employe auteur) {
+        this.auteur = auteur;
+    }
+
+    public String getContenu() {
+        return contenu;
+    }
+
+    public void setContenu(String contenu) {
+        this.contenu = contenu;
+    }
+
+    public Priorite getPriorite() {
+        return priorite;
+    }
+
+    public void setPriorite(Priorite priorite) {
+        this.priorite = priorite;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
 
     @Override
     public boolean equals(Object o) {

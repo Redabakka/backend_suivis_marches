@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.util.Objects;
 
 @Entity
@@ -21,7 +22,8 @@ public class Service {
     @Column(name = "actif", nullable = false)
     private boolean actif = true;
 
-    public Service() {}
+    public Service() {
+    }
 
     public Service(Integer id_service, String nom, String description, boolean actif) {
         this.id_service = id_service;
@@ -31,17 +33,37 @@ public class Service {
     }
 
     // --- Getters & Setters ---
-    public Integer getId_service() { return id_service; }
-    public void setId_service(Integer id_service) { this.id_service = id_service; }
+    public Integer getId_service() {
+        return id_service;
+    }
 
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
+    public void setId_service(Integer id_service) {
+        this.id_service = id_service;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getNom() {
+        return nom;
+    }
 
-    public boolean isActif() { return actif; }
-    public void setActif(boolean actif) { this.actif = actif; }
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public boolean isActif() {
+        return actif;
+    }
+
+    public void setActif(boolean actif) {
+        this.actif = actif;
+    }
 
     @Override
     public boolean equals(Object o) {

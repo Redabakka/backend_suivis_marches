@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -36,7 +37,8 @@ public class Approbation {
         APPROUVE, REFUSE
     }
 
-    public Approbation() {}
+    public Approbation() {
+    }
 
     public Approbation(Integer id_approbation, Marche marche, Employe employe,
                        Statut statut, String motif, LocalDateTime created_at) {
@@ -49,23 +51,53 @@ public class Approbation {
     }
 
     // --- Getters & Setters ---
-    public Integer getId_approbation() { return id_approbation; }
-    public void setId_approbation(Integer id_approbation) { this.id_approbation = id_approbation; }
+    public Integer getId_approbation() {
+        return id_approbation;
+    }
 
-    public Marche getMarche() { return marche; }
-    public void setMarche(Marche marche) { this.marche = marche; }
+    public void setId_approbation(Integer id_approbation) {
+        this.id_approbation = id_approbation;
+    }
 
-    public Employe getEmploye() { return employe; }
-    public void setEmploye(Employe employe) { this.employe = employe; }
+    public Marche getMarche() {
+        return marche;
+    }
 
-    public Statut getStatut() { return statut; }
-    public void setStatut(Statut statut) { this.statut = statut; }
+    public void setMarche(Marche marche) {
+        this.marche = marche;
+    }
 
-    public String getMotif() { return motif; }
-    public void setMotif(String motif) { this.motif = motif; }
+    public Employe getEmploye() {
+        return employe;
+    }
 
-    public LocalDateTime getCreated_at() { return created_at; }
-    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+    public void setEmploye(Employe employe) {
+        this.employe = employe;
+    }
+
+    public Statut getStatut() {
+        return statut;
+    }
+
+    public void setStatut(Statut statut) {
+        this.statut = statut;
+    }
+
+    public String getMotif() {
+        return motif;
+    }
+
+    public void setMotif(String motif) {
+        this.motif = motif;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
 
     @Override
     public boolean equals(Object o) {

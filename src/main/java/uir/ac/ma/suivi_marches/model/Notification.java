@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -38,7 +39,8 @@ public class Notification {
         AUTRE
     }
 
-    public Notification() {}
+    public Notification() {
+    }
 
     public Notification(Integer id_notification, Employe employe, Type type,
                         String message, boolean lu, LocalDateTime date_envoi) {
@@ -51,23 +53,53 @@ public class Notification {
     }
 
     // --- Getters & Setters ---
-    public Integer getId_notification() { return id_notification; }
-    public void setId_notification(Integer id_notification) { this.id_notification = id_notification; }
+    public Integer getId_notification() {
+        return id_notification;
+    }
 
-    public Employe getEmploye() { return employe; }
-    public void setEmploye(Employe employe) { this.employe = employe; }
+    public void setId_notification(Integer id_notification) {
+        this.id_notification = id_notification;
+    }
 
-    public Type getType() { return type; }
-    public void setType(Type type) { this.type = type; }
+    public Employe getEmploye() {
+        return employe;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setEmploye(Employe employe) {
+        this.employe = employe;
+    }
 
-    public boolean isLu() { return lu; }
-    public void setLu(boolean lu) { this.lu = lu; }
+    public Type getType() {
+        return type;
+    }
 
-    public LocalDateTime getDate_envoi() { return date_envoi; }
-    public void setDate_envoi(LocalDateTime date_envoi) { this.date_envoi = date_envoi; }
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public boolean isLu() {
+        return lu;
+    }
+
+    public void setLu(boolean lu) {
+        this.lu = lu;
+    }
+
+    public LocalDateTime getDate_envoi() {
+        return date_envoi;
+    }
+
+    public void setDate_envoi(LocalDateTime date_envoi) {
+        this.date_envoi = date_envoi;
+    }
 
     @Override
     public boolean equals(Object o) {

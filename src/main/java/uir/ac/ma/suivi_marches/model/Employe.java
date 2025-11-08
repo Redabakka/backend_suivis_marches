@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -40,7 +41,8 @@ public class Employe {
         ADMIN, CHEF, EMPLOYE
     }
 
-    public Employe() {}
+    public Employe() {
+    }
 
     public Employe(Integer id_employe, String nom, String prenom, String email, Role role,
                    Service service, boolean actif, LocalDateTime created_at) {
@@ -55,29 +57,69 @@ public class Employe {
     }
 
     // --- Getters & Setters ---
-    public Integer getId_employe() { return id_employe; }
-    public void setId_employe(Integer id_employe) { this.id_employe = id_employe; }
+    public Integer getId_employe() {
+        return id_employe;
+    }
 
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
+    public void setId_employe(Integer id_employe) {
+        this.id_employe = id_employe;
+    }
 
-    public String getPrenom() { return prenom; }
-    public void setPrenom(String prenom) { this.prenom = prenom; }
+    public String getNom() {
+        return nom;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public String getPrenom() {
+        return prenom;
+    }
 
-    public Service getService() { return service; }
-    public void setService(Service service) { this.service = service; }
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
 
-    public boolean isActif() { return actif; }
-    public void setActif(boolean actif) { this.actif = actif; }
+    public String getEmail() {
+        return email;
+    }
 
-    public LocalDateTime getCreated_at() { return created_at; }
-    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Service getService() {
+        return service;
+    }
+
+    public void setService(Service service) {
+        this.service = service;
+    }
+
+    public boolean isActif() {
+        return actif;
+    }
+
+    public void setActif(boolean actif) {
+        this.actif = actif;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
 
     @Override
     public boolean equals(Object o) {

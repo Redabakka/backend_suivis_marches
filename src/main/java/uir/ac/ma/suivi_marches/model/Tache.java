@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -50,7 +51,8 @@ public class Tache {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at = LocalDateTime.now();
 
-    public Tache() {}
+    public Tache() {
+    }
 
     public Tache(Integer id_tache, Integer id_marche, String titre, String description,
                  LocalDate date_debut, LocalDate date_fin, Integer duree_estimee,
@@ -72,44 +74,109 @@ public class Tache {
     }
 
     // Getters / Setters
-    public Integer getId_tache() { return id_tache; }
-    public void setId_tache(Integer id_tache) { this.id_tache = id_tache; }
+    public Integer getId_tache() {
+        return id_tache;
+    }
 
-    public Integer getId_marche() { return id_marche; }
-    public void setId_marche(Integer id_marche) { this.id_marche = id_marche; }
+    public void setId_tache(Integer id_tache) {
+        this.id_tache = id_tache;
+    }
 
-    public String getTitre() { return titre; }
-    public void setTitre(String titre) { this.titre = titre; }
+    public Integer getId_marche() {
+        return id_marche;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setId_marche(Integer id_marche) {
+        this.id_marche = id_marche;
+    }
 
-    public LocalDate getDate_debut() { return date_debut; }
-    public void setDate_debut(LocalDate date_debut) { this.date_debut = date_debut; }
+    public String getTitre() {
+        return titre;
+    }
 
-    public LocalDate getDate_fin() { return date_fin; }
-    public void setDate_fin(LocalDate date_fin) { this.date_fin = date_fin; }
+    public void setTitre(String titre) {
+        this.titre = titre;
+    }
 
-    public Integer getDuree_estimee() { return duree_estimee; }
-    public void setDuree_estimee(Integer duree_estimee) { this.duree_estimee = duree_estimee; }
+    public String getDescription() {
+        return description;
+    }
 
-    public Integer getResponsable() { return responsable; }
-    public void setResponsable(Integer responsable) { this.responsable = responsable; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public String getEtat() { return etat; }
-    public void setEtat(String etat) { this.etat = etat; }
+    public LocalDate getDate_debut() {
+        return date_debut;
+    }
 
-    public String getPriorite() { return priorite; }
-    public void setPriorite(String priorite) { this.priorite = priorite; }
+    public void setDate_debut(LocalDate date_debut) {
+        this.date_debut = date_debut;
+    }
 
-    public boolean isCritique() { return critique; }
-    public void setCritique(boolean critique) { this.critique = critique; }
+    public LocalDate getDate_fin() {
+        return date_fin;
+    }
 
-    public String getPertinence() { return pertinence; }
-    public void setPertinence(String pertinence) { this.pertinence = pertinence; }
+    public void setDate_fin(LocalDate date_fin) {
+        this.date_fin = date_fin;
+    }
 
-    public LocalDateTime getCreated_at() { return created_at; }
-    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+    public Integer getDuree_estimee() {
+        return duree_estimee;
+    }
+
+    public void setDuree_estimee(Integer duree_estimee) {
+        this.duree_estimee = duree_estimee;
+    }
+
+    public Integer getResponsable() {
+        return responsable;
+    }
+
+    public void setResponsable(Integer responsable) {
+        this.responsable = responsable;
+    }
+
+    public String getEtat() {
+        return etat;
+    }
+
+    public void setEtat(String etat) {
+        this.etat = etat;
+    }
+
+    public String getPriorite() {
+        return priorite;
+    }
+
+    public void setPriorite(String priorite) {
+        this.priorite = priorite;
+    }
+
+    public boolean isCritique() {
+        return critique;
+    }
+
+    public void setCritique(boolean critique) {
+        this.critique = critique;
+    }
+
+    public String getPertinence() {
+        return pertinence;
+    }
+
+    public void setPertinence(String pertinence) {
+        this.pertinence = pertinence;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -119,5 +186,7 @@ public class Tache {
     }
 
     @Override
-    public int hashCode() { return Objects.hashCode(id_tache); }
+    public int hashCode() {
+        return Objects.hashCode(id_tache);
+    }
 }

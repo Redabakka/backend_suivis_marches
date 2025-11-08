@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -37,7 +38,8 @@ public class Signalement {
         NON_PERTINENTE
     }
 
-    public Signalement() {}
+    public Signalement() {
+    }
 
     public Signalement(Integer id_signalement, Tache tache, Employe employe,
                        Type type, String commentaire, LocalDateTime created_at) {
@@ -50,23 +52,53 @@ public class Signalement {
     }
 
     // --- Getters & Setters ---
-    public Integer getId_signalement() { return id_signalement; }
-    public void setId_signalement(Integer id_signalement) { this.id_signalement = id_signalement; }
+    public Integer getId_signalement() {
+        return id_signalement;
+    }
 
-    public Tache getTache() { return tache; }
-    public void setTache(Tache tache) { this.tache = tache; }
+    public void setId_signalement(Integer id_signalement) {
+        this.id_signalement = id_signalement;
+    }
 
-    public Employe getEmploye() { return employe; }
-    public void setEmploye(Employe employe) { this.employe = employe; }
+    public Tache getTache() {
+        return tache;
+    }
 
-    public Type getType() { return type; }
-    public void setType(Type type) { this.type = type; }
+    public void setTache(Tache tache) {
+        this.tache = tache;
+    }
 
-    public String getCommentaire() { return commentaire; }
-    public void setCommentaire(String commentaire) { this.commentaire = commentaire; }
+    public Employe getEmploye() {
+        return employe;
+    }
 
-    public LocalDateTime getCreated_at() { return created_at; }
-    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+    public void setEmploye(Employe employe) {
+        this.employe = employe;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
+    }
 
     @Override
     public boolean equals(Object o) {

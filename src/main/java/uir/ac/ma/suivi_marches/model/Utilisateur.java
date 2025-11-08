@@ -1,6 +1,7 @@
 package uir.ac.ma.suivi_marches.model;
 
 import jakarta.persistence.*;
+
 import java.util.Objects;
 
 @Entity
@@ -29,9 +30,10 @@ public class Utilisateur {
     @Column(name = "role", nullable = false, columnDefinition = "role_type")
     private Role role; // ADMIN | CHEF | EMPLOYE
 
-    public enum Role { ADMIN, CHEF, EMPLOYE }
+    public enum Role {ADMIN, CHEF, EMPLOYE}
 
-    public Utilisateur() {}
+    public Utilisateur() {
+    }
 
     public Utilisateur(Integer id_user, Employe employe, String username,
                        String password_hash, Role role) {
@@ -43,20 +45,45 @@ public class Utilisateur {
     }
 
     // Getters / Setters
-    public Integer getId_user() { return id_user; }
-    public void setId_user(Integer id_user) { this.id_user = id_user; }
+    public Integer getId_user() {
+        return id_user;
+    }
 
-    public Employe getEmploye() { return employe; }
-    public void setEmploye(Employe employe) { this.employe = employe; }
+    public void setId_user(Integer id_user) {
+        this.id_user = id_user;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public Employe getEmploye() {
+        return employe;
+    }
 
-    public String getPassword_hash() { return password_hash; }
-    public void setPassword_hash(String password_hash) { this.password_hash = password_hash; }
+    public void setEmploye(Employe employe) {
+        this.employe = employe;
+    }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword_hash() {
+        return password_hash;
+    }
+
+    public void setPassword_hash(String password_hash) {
+        this.password_hash = password_hash;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
 
     @Override
     public String toString() {
