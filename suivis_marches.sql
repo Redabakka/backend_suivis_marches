@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS utilisateur (
         ON DELETE SET NULL,
     username VARCHAR(80) NOT NULL UNIQUE,
     password_hash VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('Admin','Chef','Employe'))
+    role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN','CHEF','EMPLOYE'))
 );
 
 -- Index utiles

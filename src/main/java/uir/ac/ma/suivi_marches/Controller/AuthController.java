@@ -43,7 +43,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String password = request.get("password");
-        String role = request.get("role");
+        String role = request.get("role").toUpperCase();
         Integer idEmploye = request.containsKey("idEmploye") ? Integer.valueOf(request.get("idEmploye")) : null;
 
         if (utilisateurService.existsByUsername(username)) {
