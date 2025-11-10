@@ -173,7 +173,7 @@ public class EmployeController {
             }
 
             if (request.containsKey("role")) {
-                String roleStr = request.get("role").toString();
+                String roleStr = request.get("role").toString().toUpperCase();
                 try {
                     Employe.Role role = Employe.Role.valueOf(roleStr.toUpperCase());
                     employe.setRole(role);
