@@ -27,7 +27,7 @@ public class Employe {
     @Column(name = "role", nullable = false, length = 20)
     private Role role;  // ADMIN | CHEF | EMPLOYE
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "id_service", nullable = false, foreignKey = @ForeignKey(name = "fk_employe_service"))
     private Service service;
 
