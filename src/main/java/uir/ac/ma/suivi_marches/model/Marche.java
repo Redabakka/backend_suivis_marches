@@ -37,14 +37,14 @@ public class Marche {
     @Column(name = "statut", nullable = false, length = 30)
     private Statut statut;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "id_service", nullable = false, foreignKey = @ForeignKey(name = "fk_marche_service"))
     private Service service;
 
     @Column(name = "fichier_cps_path", length = 500)
     private String fichier_cps_path;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "created_by", nullable = false, foreignKey = @ForeignKey(name = "fk_marche_employe"))
     private Employe created_by;
 

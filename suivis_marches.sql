@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS marche (
     budget_estime DECIMAL(12,2) CHECK (budget_estime >= 0),
     date_debut DATE NOT NULL,
     date_fin DATE NOT NULL,
-    statut VARCHAR(30) NOT NULL CHECK (statut IN ('Brouillon','En attente approbations','Approuvé par service','Validé chef','Refusé')),
+    statut VARCHAR(30) NOT NULL CHECK (statut IN ('EN_PREPARATION', 'EN_COURS', 'TERMINE', 'ANNULE')),
     id_service INT NOT NULL REFERENCES service(id_service) ON UPDATE CASCADE ON DELETE RESTRICT,
     fichier_cps_path VARCHAR(255) NOT NULL,
     created_by INT NOT NULL REFERENCES employe(id_employe) ON UPDATE CASCADE ON DELETE RESTRICT,
