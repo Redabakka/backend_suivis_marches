@@ -15,11 +15,11 @@ public class Commentaire {
     private Integer id_commentaire;
 
     // --- Relations ---
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "id_tache", nullable = false, foreignKey = @ForeignKey(name = "fk_commentaire_tache"))
     private Tache tache;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "id_auteur", nullable = false, foreignKey = @ForeignKey(name = "fk_commentaire_employe"))
     private Employe auteur;
 

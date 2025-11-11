@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS commentaire (
     id_tache INT NOT NULL REFERENCES tache(id_tache) ON UPDATE CASCADE ON DELETE CASCADE,
     id_auteur INT NOT NULL REFERENCES employe(id_employe) ON UPDATE CASCADE ON DELETE RESTRICT,
     contenu TEXT NOT NULL,
-    priorite VARCHAR(20) CHECK (priorite IN ('Urgent','Quotidien','Informatif')),
+    priorite VARCHAR(20) CHECK (priorite IN ('URGENT','QUOTIDIEN','INFORMATIF')),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
