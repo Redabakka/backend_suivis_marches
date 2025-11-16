@@ -1,10 +1,13 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "commentaire")
 public class Commentaire {
@@ -14,21 +17,28 @@ public class Commentaire {
     @Column(name = "id_commentaire")
     private Integer id_commentaire;
 
-    // --- Relations ---
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "id_tache", nullable = false, foreignKey = @ForeignKey(name = "fk_commentaire_tache"))
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "id_tache",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_commentaire_tache")
+    )
     private Tache tache;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "id_auteur", nullable = false, foreignKey = @ForeignKey(name = "fk_commentaire_employe"))
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "id_auteur",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_commentaire_employe")
+    )
     private Employe auteur;
 
-    @Column(name = "contenu", nullable = false, length = 2000)
+    @Column(name = "contenu", nullable = false, columnDefinition = "TEXT")
     private String contenu;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "priorite", nullable = false, length = 20)
-    private Priorite priorite; // Urgent / Quotidien / Informatif
+    @Column(name = "priorite", length = 20)
+    private Priorite priorite; // peut être null en DB
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at = LocalDateTime.now();
@@ -38,6 +48,7 @@ public class Commentaire {
         QUOTIDIEN,
         INFORMATIF
     }
+
 
     public Commentaire() {
     }

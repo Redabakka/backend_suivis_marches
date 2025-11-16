@@ -1,5 +1,6 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -9,6 +10,8 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "marche")
+// Quand Marche est chargée en proxy (Marche$HibernateProxy), Jackson ignore ces champs
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Marche {
 
     @Id
@@ -16,21 +19,19 @@ public class Marche {
     @Column(name = "id_marche")
     private Integer id_marche;
 
-    @Column(name = "intitule", nullable = false, length = 255)
+    @Column(name = "intitule", nullable = false, length = 200)
     private String intitule;
 
-    @Column(name = "objectif", columnDefinition = "TEXT")
+    @Column(name = "objectif", nullable = false, columnDefinition = "TEXT")
     private String objectif;
 
-
-    @Column(name = "budget_estime", precision = 19, scale = 2, nullable = false)
+    @Column(name = "budget_estime", precision = 12, scale = 2)
     private BigDecimal budget_estime;
 
-
-    @Column(name = "date_debut")
+    @Column(name = "date_debut", nullable = false)
     private LocalDate date_debut;
 
-    @Column(name = "date_fin")
+    @Column(name = "date_fin", nullable = false)
     private LocalDate date_fin;
 
     @Enumerated(EnumType.STRING)
@@ -38,14 +39,26 @@ public class Marche {
     private Statut statut;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "id_service", nullable = false, foreignKey = @ForeignKey(name = "fk_marche_service"))
+    @JoinColumn(
+            name = "id_service",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_marche_service")
+    )
+    // Si Service est un proxy Hibernate, Jackson ignorera ses champs techniques
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Service service;
 
-    @Column(name = "fichier_cps_path", length = 500)
+    @Column(name = "fichier_cps_path", nullable = false, length = 255)
     private String fichier_cps_path;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "created_by", nullable = false, foreignKey = @ForeignKey(name = "fk_marche_employe"))
+    @JoinColumn(
+            name = "created_by",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_marche_employe")
+    )
+    // Même chose pour Employe lorsque Marche.created_by est un proxy
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Employe created_by;
 
     @Column(name = "created_at", nullable = false)
@@ -61,9 +74,16 @@ public class Marche {
     public Marche() {
     }
 
-    public Marche(Integer id_marche, String intitule, String objectif, BigDecimal budget_estime,
-                  LocalDate date_debut, LocalDate date_fin, Statut statut,
-                  Service service, String fichier_cps_path, Employe created_by,
+    public Marche(Integer id_marche,
+                  String intitule,
+                  String objectif,
+                  BigDecimal budget_estime,
+                  LocalDate date_debut,
+                  LocalDate date_fin,
+                  Statut statut,
+                  Service service,
+                  String fichier_cps_path,
+                  Employe created_by,
                   LocalDateTime created_at) {
         this.id_marche = id_marche;
         this.intitule = intitule;
@@ -78,7 +98,6 @@ public class Marche {
         this.created_at = created_at;
     }
 
-    // --- Getters & Setters ---
     public Integer getId_marche() {
         return id_marche;
     }

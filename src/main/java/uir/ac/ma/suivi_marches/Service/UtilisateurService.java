@@ -29,30 +29,27 @@ public class UtilisateurService {
                 .filter(u -> passwordEncoder.matches(rawPassword, u.getPassword_hash()));
     }
 
-    public Utilisateur register(Integer idEmploye, String username, String password, String roleStr) {
+    // 🔥 VERSION CORRIGÉE – RÔLE EN ENUM, PLUS DE STRING
+    public Utilisateur register(Integer idEmploye, String username, String password, Utilisateur.Role roleEnum) {
+
+        // Vérifier doublon username
         utilisateurRepo.findByUsername(username).ifPresent(u -> {
             throw new IllegalArgumentException("Username déjà pris");
         });
 
+        // Vérifier employé si fourni
         Employe employe = null;
         if (idEmploye != null) {
             employe = employeRepo.findById(idEmploye)
                     .orElseThrow(() -> new IllegalArgumentException("Employé introuvable: " + idEmploye));
         }
 
+        // Créer utilisateur
         Utilisateur u = new Utilisateur();
         u.setEmploye(employe);
         u.setUsername(username);
         u.setPassword_hash(passwordEncoder.encode(password));
-
-        // map String -> enum Role
-        Utilisateur.Role role;
-        try {
-            role = Utilisateur.Role.valueOf(roleStr.toUpperCase().replace(' ', '_'));
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Role invalide (attendu: ADMIN, CHEF, EMPLOYE)");
-        }
-        u.setRole(role);
+        u.setRole(roleEnum);   // ⬅️ ENUM, et c’est OK avec ta DB
 
         return utilisateurRepo.save(u);
     }
@@ -61,3 +58,4 @@ public class UtilisateurService {
         return utilisateurRepo.findByUsername(username).isPresent();
     }
 }
+

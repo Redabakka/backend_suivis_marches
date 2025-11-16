@@ -1,9 +1,12 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.Objects;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "service")
 public class Service {
@@ -13,14 +16,15 @@ public class Service {
     @Column(name = "id_service")
     private Integer id_service;
 
-    @Column(name = "nom", nullable = false, unique = true, length = 150)
+    @Column(name = "nom", nullable = false, length = 100)
     private String nom;
 
-    @Column(name = "description", length = 500)
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "actif", nullable = false)
     private boolean actif = true;
+
 
     public Service() {
     }

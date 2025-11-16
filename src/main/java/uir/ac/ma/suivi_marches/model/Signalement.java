@@ -1,10 +1,13 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "signalement")
 public class Signalement {
@@ -14,35 +17,37 @@ public class Signalement {
     @Column(name = "id_signalement")
     private Integer id_signalement;
 
-    // --- Relations ---
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_tache", nullable = false, foreignKey = @ForeignKey(name = "fk_signalement_tache"))
+    @JoinColumn(
+            name = "id_tache",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_signalement_tache")
+    )
     private Tache tache;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_employe", nullable = false, foreignKey = @ForeignKey(name = "fk_signalement_employe"))
+    @JoinColumn(
+            name = "id_employe",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_signalement_employe")
+    )
     private Employe employe;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, length = 30)
-    private Type type; // Validée / Non pertinente
+    // DOIT matcher exactement le CHECK Postgres : 'Validée' / 'Non pertinente'
+    @Column(name = "type", nullable = false, length = 20)
+    private String type; // "Validée" ou "Non pertinente"
 
-    @Column(name = "commentaire", length = 2000)
+    @Column(name = "commentaire", columnDefinition = "TEXT")
     private String commentaire;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at = LocalDateTime.now();
 
-    public enum Type {
-        VALIDEE,
-        NON_PERTINENTE
-    }
-
     public Signalement() {
     }
 
     public Signalement(Integer id_signalement, Tache tache, Employe employe,
-                       Type type, String commentaire, LocalDateTime created_at) {
+                       String type, String commentaire, LocalDateTime created_at) {
         this.id_signalement = id_signalement;
         this.tache = tache;
         this.employe = employe;
@@ -76,11 +81,11 @@ public class Signalement {
         this.employe = employe;
     }
 
-    public Type getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(Type type) {
+    public void setType(String type) {
         this.type = type;
     }
 

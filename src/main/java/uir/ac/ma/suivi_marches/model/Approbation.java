@@ -1,10 +1,13 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "approbation")
 public class Approbation {
@@ -14,18 +17,20 @@ public class Approbation {
     @Column(name = "id_approbation")
     private Integer id_approbation;
 
-    // --- Relations vers Marche et Employe ---
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_marche", nullable = false, foreignKey = @ForeignKey(name = "fk_approbation_marche"))
+    @JoinColumn(name = "id_marche", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_approbation_marche"))
     private Marche marche;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_employe", nullable = false, foreignKey = @ForeignKey(name = "fk_approbation_employe"))
+    @JoinColumn(name = "id_employe", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_approbation_employe"))
     private Employe employe;
 
-    @Enumerated(EnumType.STRING)
+    // === IMPORTANT ===
+    // La base stocke "Approuvé" et "Refusé"
     @Column(name = "statut", nullable = false, length = 20)
-    private Statut statut; // Approuvé / Refusé
+    private String statut; // valeurs: "Approuvé" / "Refusé"
 
     @Column(name = "motif", length = 1000)
     private String motif;
@@ -33,15 +38,11 @@ public class Approbation {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at = LocalDateTime.now();
 
-    public enum Statut {
-        APPROUVE, REFUSE
-    }
-
     public Approbation() {
     }
 
     public Approbation(Integer id_approbation, Marche marche, Employe employe,
-                       Statut statut, String motif, LocalDateTime created_at) {
+                       String statut, String motif, LocalDateTime created_at) {
         this.id_approbation = id_approbation;
         this.marche = marche;
         this.employe = employe;
@@ -50,7 +51,7 @@ public class Approbation {
         this.created_at = created_at;
     }
 
-    // --- Getters & Setters ---
+    // Getters / Setters
     public Integer getId_approbation() {
         return id_approbation;
     }
@@ -75,11 +76,11 @@ public class Approbation {
         this.employe = employe;
     }
 
-    public Statut getStatut() {
+    public String getStatut() {
         return statut;
     }
 
-    public void setStatut(Statut statut) {
+    public void setStatut(String statut) {
         this.statut = statut;
     }
 

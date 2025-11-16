@@ -20,7 +20,7 @@ public class EmployeController {
     private final EmployeService employeService;
     private final ServiceService serviceService;
 
-    // Pattern pour validation email
+    // Validation email
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
     );
@@ -33,27 +33,21 @@ public class EmployeController {
     // 🔹 Récupérer tous les employés
     @GetMapping
     public ResponseEntity<List<Employe>> getAllEmployes() {
-        List<Employe> employes = employeService.getAllEmployes();
-        return ResponseEntity.ok(employes);
+        return ResponseEntity.ok(employeService.getAllEmployes());
     }
 
     // 🔹 Récupérer un employé par ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getEmployeById(@PathVariable("id") int idEmploye) {
-        Optional<Employe> employe = employeService.getEmployeById(idEmploye);
-
-        if (employe.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
-        }
-
-        return ResponseEntity.ok(employe.get());
+        return employeService.getEmployeById(idEmploye)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("message", "Employé introuvable")));
     }
 
-    // 🔹 Ajouter un nouveau employé
+    // 🔹 Ajouter un employé
     @PostMapping
     public ResponseEntity<?> addEmploye(@RequestBody Map<String, Object> request) {
         try {
-            // Récupération des données
             String nom = request.get("nom").toString();
             String prenom = request.get("prenom").toString();
             String email = request.get("email").toString();
@@ -61,42 +55,30 @@ public class EmployeController {
             int idService = Integer.parseInt(request.get("idService").toString());
             boolean actif = !request.containsKey("actif") || Boolean.parseBoolean(request.get("actif").toString());
 
-            // Validations
-            if (nom == null || nom.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le nom est obligatoire"));
+            // validations simples
+            if (nom.trim().isEmpty() || prenom.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Nom/prénom obligatoires"));
             }
-            if (prenom == null || prenom.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le prénom est obligatoire"));
-            }
-            if (nom.length() > 100) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le nom ne doit pas dépasser 100 caractères"));
-            }
-            if (prenom.length() > 100) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le prénom ne doit pas dépasser 100 caractères"));
-            }
-            if (email == null || email.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "L'email est obligatoire"));
+            if (nom.length() > 100 || prenom.length() > 100) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Nom/prénom trop long"));
             }
             if (!EMAIL_PATTERN.matcher(email).matches()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Format d'email invalide"));
-            }
-            if (email.length() > 150) {
-                return ResponseEntity.badRequest().body(Map.of("message", "L'email ne doit pas dépasser 150 caractères"));
+                return ResponseEntity.badRequest().body(Map.of("message", "Email invalide"));
             }
 
-            // Vérifier que le service existe
-            uir.ac.ma.suivi_marches.model.Service service = serviceService.getServiceById(idService)
-                    .orElseThrow(() -> new IllegalArgumentException("Service introuvable: " + idService));
+            // Vérification service
+            var service = serviceService.getServiceById(idService)
+                    .orElseThrow(() -> new IllegalArgumentException("Service introuvable : " + idService));
 
-            // Mapper le rôle
+            // Conversion rôle
             Employe.Role role;
             try {
                 role = Employe.Role.valueOf(roleStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Rôle invalide (attendu: ADMIN, CHEF, EMPLOYE)"));
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Rôle invalide (ADMIN, CHEF, EMPLOYE)"));
             }
 
-            // Créer l'employé
+            // Création employé
             Employe employe = new Employe();
             employe.setNom(nom.trim());
             employe.setPrenom(prenom.trim());
@@ -106,195 +88,159 @@ public class EmployeController {
             employe.setActif(actif);
             employe.setCreated_at(LocalDateTime.now());
 
-            Employe savedEmploye = employeService.addEmploye(employe);
+            Employe saved = employeService.addEmploye(employe);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Employé créé avec succès",
-                    "id_employe", savedEmploye.getId_employe()
+                    "id_employe", saved.getId_employe()
             ));
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la création: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(Map.of("message", "Erreur : " + e.getMessage()));
         }
     }
 
-    // 🔹 Modifier un employé existant
+    // 🔹 Modifier un employé
     @PutMapping("/{id}")
     public ResponseEntity<?> modifyEmploye(@PathVariable("id") int idEmploye,
                                            @RequestBody Map<String, Object> request) {
-        Optional<Employe> existingEmploye = employeService.getEmployeById(idEmploye);
+        Optional<Employe> existing = employeService.getEmployeById(idEmploye);
 
-        if (existingEmploye.isEmpty()) {
+        if (existing.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
 
         try {
-            Employe employe = existingEmploye.get();
+            Employe employe = existing.get();
 
-            // Mettre à jour les champs si présents
+            // nom
             if (request.containsKey("nom")) {
                 String nom = request.get("nom").toString();
-                if (nom == null || nom.trim().isEmpty()) {
+                if (nom.trim().isEmpty()) {
                     return ResponseEntity.badRequest().body(Map.of("message", "Le nom ne peut pas être vide"));
-                }
-                if (nom.length() > 100) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le nom ne doit pas dépasser 100 caractères"));
                 }
                 employe.setNom(nom.trim());
             }
 
+            // prenom
             if (request.containsKey("prenom")) {
                 String prenom = request.get("prenom").toString();
-                if (prenom == null || prenom.trim().isEmpty()) {
+                if (prenom.trim().isEmpty()) {
                     return ResponseEntity.badRequest().body(Map.of("message", "Le prénom ne peut pas être vide"));
-                }
-                if (prenom.length() > 100) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le prénom ne doit pas dépasser 100 caractères"));
                 }
                 employe.setPrenom(prenom.trim());
             }
 
+            // email
             if (request.containsKey("email")) {
                 String email = request.get("email").toString();
-                if (email == null || email.trim().isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "L'email ne peut pas être vide"));
-                }
                 if (!EMAIL_PATTERN.matcher(email).matches()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Format d'email invalide"));
-                }
-                if (email.length() > 150) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "L'email ne doit pas dépasser 150 caractères"));
+                    return ResponseEntity.badRequest().body(Map.of("message", "Email invalide"));
                 }
                 employe.setEmail(email.trim().toLowerCase());
             }
 
+            // role
             if (request.containsKey("role")) {
-                String roleStr = request.get("role").toString().toUpperCase();
                 try {
-                    Employe.Role role = Employe.Role.valueOf(roleStr.toUpperCase());
+                    Employe.Role role = Employe.Role.valueOf(request.get("role").toString().toUpperCase());
                     employe.setRole(role);
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Rôle invalide (attendu: ADMIN, CHEF, EMPLOYE)"));
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Rôle invalide (ADMIN, CHEF, EMPLOYE)"));
                 }
             }
 
+            // service
             if (request.containsKey("idService")) {
                 int idService = Integer.parseInt(request.get("idService").toString());
-                uir.ac.ma.suivi_marches.model.Service service = serviceService.getServiceById(idService)
-                        .orElseThrow(() -> new IllegalArgumentException("Service introuvable: " + idService));
+                var service = serviceService.getServiceById(idService)
+                        .orElseThrow(() -> new IllegalArgumentException("Service introuvable : " + idService));
                 employe.setService(service);
             }
 
+            // actif
             if (request.containsKey("actif")) {
-                boolean actif = Boolean.parseBoolean(request.get("actif").toString());
-                employe.setActif(actif);
+                employe.setActif(Boolean.parseBoolean(request.get("actif").toString()));
             }
 
-            Employe updatedEmploye = employeService.modifyEmploye(employe);
+            Employe updated = employeService.modifyEmploye(employe);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Employé modifié avec succès",
-                    "employe", updatedEmploye
+                    "employe", updated
             ));
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la modification: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    // 🔹 Supprimer un employé (soft delete - marquer comme inactif)
+    // 🔹 Désactiver employé (soft delete)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEmploye(@PathVariable("id") int idEmploye) {
-        Optional<Employe> employe = employeService.getEmployeById(idEmploye);
-
-        if (employe.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
-        }
-
-        try {
-            // Soft delete: marquer comme inactif
-            Employe existingEmploye = employe.get();
-            existingEmploye.setActif(false);
-            employeService.modifyEmploye(existingEmploye);
-
-            return ResponseEntity.ok(Map.of("message", "Employé désactivé avec succès"));
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la désactivation: " + e.getMessage()
-            ));
-        }
+        return employeService.getEmployeById(idEmploye)
+                .map(e -> {
+                    e.setActif(false);
+                    employeService.modifyEmploye(e);
+                    return ResponseEntity.ok(Map.of("message", "Employé désactivé"));
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("message", "Employé introuvable")));
     }
 
-    // 🔹 Supprimer définitivement un employé (hard delete)
+    // 🔹 Suppression définitive
     @DeleteMapping("/{id}/permanent")
     public ResponseEntity<?> permanentDeleteEmploye(@PathVariable("id") int idEmploye) {
-        Optional<Employe> employe = employeService.getEmployeById(idEmploye);
-
-        if (employe.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
-        }
-
-        try {
-            employeService.deleteEmploye(idEmploye);
-            return ResponseEntity.ok(Map.of("message", "Employé supprimé définitivement"));
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la suppression: " + e.getMessage()
-            ));
-        }
+        return employeService.getEmployeById(idEmploye)
+                .map(e -> {
+                    employeService.deleteEmploye(idEmploye);
+                    return ResponseEntity.ok(Map.of("message", "Employé supprimé définitivement"));
+                })
+                .orElseGet(() -> ResponseEntity.status(404).body(Map.of("message", "Employé introuvable")));
     }
 
-    // 🔹 Récupérer uniquement les employés actifs
+    // 🔹 Employés actifs
     @GetMapping("/actifs")
     public ResponseEntity<List<Employe>> getActiveEmployes() {
         List<Employe> employes = employeService.getAllEmployes()
                 .stream()
                 .filter(Employe::isActif)
                 .toList();
+
         return ResponseEntity.ok(employes);
     }
 
-    // 🔹 Récupérer les employés par service
+    // 🔹 Employés par service
     @GetMapping("/service/{idService}")
     public ResponseEntity<?> getEmployesByService(@PathVariable("idService") int idService) {
-        // Vérifier que le service existe
         if (serviceService.getServiceById(idService).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Service introuvable"));
         }
 
-        List<Employe> employes = employeService.getAllEmployes()
+        List<Employe> list = employeService.getAllEmployes()
                 .stream()
-                .filter(e -> e.getService().getId_service().equals(idService))
+                .filter(e -> e.getService().getId_service() == idService)
                 .toList();
 
-        return ResponseEntity.ok(employes);
+        return ResponseEntity.ok(list);
     }
 
-    // 🔹 Récupérer les employés par rôle
+    // 🔹 Employés par rôle
     @GetMapping("/role/{role}")
     public ResponseEntity<?> getEmployesByRole(@PathVariable("role") String roleStr) {
         try {
             Employe.Role role = Employe.Role.valueOf(roleStr.toUpperCase());
 
-            List<Employe> employes = employeService.getAllEmployes()
+            List<Employe> list = employeService.getAllEmployes()
                     .stream()
                     .filter(e -> e.getRole() == role)
                     .toList();
 
-            return ResponseEntity.ok(employes);
+            return ResponseEntity.ok(list);
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Rôle invalide (attendu: ADMIN, CHEF, EMPLOYE)"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", "Rôle invalide (ADMIN, CHEF, EMPLOYE)"
+            ));
         }
     }
 }

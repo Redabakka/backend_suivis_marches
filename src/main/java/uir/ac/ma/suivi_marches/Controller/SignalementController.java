@@ -19,6 +19,9 @@ import java.util.Optional;
 @CrossOrigin
 public class SignalementController {
 
+    private static final String TYPE_VALIDEE = "Validée";
+    private static final String TYPE_NON_PERTINENTE = "Non pertinente";
+
     private final SignalementService signalementService;
     private final TacheService tacheService;
     private final EmployeService employeService;
@@ -31,39 +34,67 @@ public class SignalementController {
         this.employeService = employeService;
     }
 
+    // 🔹 Helper : mappe ce que reçoit l'API vers les valeurs DB
+    private String mapRequestTypeToDbValue(String raw) {
+        if (raw == null) {
+            throw new IllegalArgumentException("Type est obligatoire");
+        }
+
+        String normalized = raw.trim().toUpperCase()
+                .replace("É", "E")
+                .replace(' ', '_');
+
+        switch (normalized) {
+            case "VALIDEE":
+                return TYPE_VALIDEE;           // "Validée"
+            case "NON_PERTINENTE":
+            case "NONPERTINENTE":
+                return TYPE_NON_PERTINENTE;    // "Non pertinente"
+            default:
+                throw new IllegalArgumentException("Type invalide (attendu: VALIDEE, NON_PERTINENTE)");
+        }
+    }
+
     // 🔹 Récupérer tous les signalements
     @GetMapping
     public ResponseEntity<List<Signalement>> getAllSignalements() {
-        List<Signalement> signalements = signalementService.getAllSignalements();
-        return ResponseEntity.ok(signalements);
+        return ResponseEntity.ok(signalementService.getAllSignalements());
     }
 
     // 🔹 Récupérer un signalement par ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getSignalementById(@PathVariable("id") int idSignalement) {
-        Optional<Signalement> signalement = signalementService.getSignalementById(idSignalement);
-
-        if (signalement.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("message", "Signalement introuvable"));
-        }
-
-        return ResponseEntity.ok(signalement.get());
+        return signalementService.getSignalementById(idSignalement)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404)
+                        .body(Map.of("message", "Signalement introuvable")));
     }
 
     // 🔹 Ajouter un nouveau signalement
     @PostMapping
     public ResponseEntity<?> addSignalement(@RequestBody Map<String, Object> request) {
         try {
-            // Récupération des données
+            // Vérifier les champs obligatoires
+            if (!request.containsKey("idTache") ||
+                    !request.containsKey("idEmploye") ||
+                    !request.containsKey("type")) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Champs obligatoires : idTache, idEmploye, type")
+                );
+            }
+
             int idTache = Integer.parseInt(request.get("idTache").toString());
             int idEmploye = Integer.parseInt(request.get("idEmploye").toString());
             String typeStr = request.get("type").toString();
-            String commentaire = request.containsKey("commentaire") ?
-                    request.get("commentaire").toString() : null;
+            String commentaire = request.containsKey("commentaire") && request.get("commentaire") != null
+                    ? request.get("commentaire").toString()
+                    : null;
 
-            // Validations
+            // Validation commentaire
             if (commentaire != null && commentaire.length() > 2000) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le commentaire ne doit pas dépasser 2000 caractères"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Le commentaire ne doit pas dépasser 2000 caractères")
+                );
             }
 
             // Vérifier que la tâche existe
@@ -74,35 +105,35 @@ public class SignalementController {
             Employe employe = employeService.getEmployeById(idEmploye)
                     .orElseThrow(() -> new IllegalArgumentException("Employé introuvable: " + idEmploye));
 
-            // Mapper le type
-            Signalement.Type type;
+            // Mapper vers valeur DB
+            String dbTypeValue;
             try {
-                type = Signalement.Type.valueOf(typeStr.toUpperCase());
+                dbTypeValue = mapRequestTypeToDbValue(typeStr);
             } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Type invalide (attendu: VALIDEE, NON_PERTINENTE)"));
+                return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
             }
 
             // Créer le signalement
             Signalement signalement = new Signalement();
             signalement.setTache(tache);
             signalement.setEmploye(employe);
-            signalement.setType(type);
+            signalement.setType(dbTypeValue); // String "Validée" / "Non pertinente"
             signalement.setCommentaire(commentaire);
             signalement.setCreated_at(LocalDateTime.now());
 
-            Signalement savedSignalement = signalementService.addSignalement(signalement);
+            Signalement saved = signalementService.addSignalement(signalement);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Signalement créé avec succès",
-                    "id_signalement", savedSignalement.getId_signalement()
+                    "id_signalement", saved.getId_signalement()
             ));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la création: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la création: " + e.getMessage())
+            );
         }
     }
 
@@ -110,47 +141,50 @@ public class SignalementController {
     @PutMapping("/{id}")
     public ResponseEntity<?> modifySignalement(@PathVariable("id") int idSignalement,
                                                @RequestBody Map<String, Object> request) {
-        Optional<Signalement> existingSignalement = signalementService.getSignalementById(idSignalement);
+        Optional<Signalement> existing = signalementService.getSignalementById(idSignalement);
 
-        if (existingSignalement.isEmpty()) {
+        if (existing.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Signalement introuvable"));
         }
 
         try {
-            Signalement signalement = existingSignalement.get();
+            Signalement signalement = existing.get();
 
-            // Mettre à jour les champs si présents
             if (request.containsKey("type")) {
                 String typeStr = request.get("type").toString();
                 try {
-                    Signalement.Type type = Signalement.Type.valueOf(typeStr.toUpperCase());
-                    signalement.setType(type);
+                    String dbTypeValue = mapRequestTypeToDbValue(typeStr);
+                    signalement.setType(dbTypeValue);
                 } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Type invalide (attendu: VALIDEE, NON_PERTINENTE)"));
+                    return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
                 }
             }
 
             if (request.containsKey("commentaire")) {
-                String commentaire = request.get("commentaire").toString();
+                String commentaire = request.get("commentaire") != null
+                        ? request.get("commentaire").toString()
+                        : null;
                 if (commentaire != null && commentaire.length() > 2000) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le commentaire ne doit pas dépasser 2000 caractères"));
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message", "Le commentaire ne doit pas dépasser 2000 caractères")
+                    );
                 }
                 signalement.setCommentaire(commentaire);
             }
 
-            Signalement updatedSignalement = signalementService.modifySignalement(signalement);
+            Signalement updated = signalementService.modifySignalement(signalement);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Signalement modifié avec succès",
-                    "signalement", updatedSignalement
+                    "signalement", updated
             ));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la modification: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la modification: " + e.getMessage())
+            );
         }
     }
 
@@ -168,16 +202,15 @@ public class SignalementController {
             return ResponseEntity.ok(Map.of("message", "Signalement supprimé avec succès"));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la suppression: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la suppression: " + e.getMessage())
+            );
         }
     }
 
     // 🔹 Récupérer les signalements par tâche
     @GetMapping("/tache/{idTache}")
     public ResponseEntity<?> getSignalementsByTache(@PathVariable("idTache") int idTache) {
-        // Vérifier que la tâche existe
         if (tacheService.getTacheById(idTache).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Tâche introuvable"));
         }
@@ -193,7 +226,6 @@ public class SignalementController {
     // 🔹 Récupérer les signalements par employé
     @GetMapping("/employe/{idEmploye}")
     public ResponseEntity<?> getSignalementsByEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -210,17 +242,17 @@ public class SignalementController {
     @GetMapping("/type/{type}")
     public ResponseEntity<?> getSignalementsByType(@PathVariable("type") String typeStr) {
         try {
-            Signalement.Type type = Signalement.Type.valueOf(typeStr.toUpperCase());
+            String dbTypeValue = mapRequestTypeToDbValue(typeStr);
 
             List<Signalement> signalements = signalementService.getAllSignalements()
                     .stream()
-                    .filter(s -> s.getType() == type)
+                    .filter(s -> dbTypeValue.equals(s.getType()))
                     .toList();
 
             return ResponseEntity.ok(signalements);
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Type invalide (attendu: VALIDEE, NON_PERTINENTE)"));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
@@ -229,7 +261,7 @@ public class SignalementController {
     public ResponseEntity<List<Signalement>> getSignalementsValidees() {
         List<Signalement> signalements = signalementService.getAllSignalements()
                 .stream()
-                .filter(s -> s.getType() == Signalement.Type.VALIDEE)
+                .filter(s -> TYPE_VALIDEE.equals(s.getType()))
                 .toList();
 
         return ResponseEntity.ok(signalements);
@@ -240,16 +272,15 @@ public class SignalementController {
     public ResponseEntity<List<Signalement>> getSignalementsNonPertinentes() {
         List<Signalement> signalements = signalementService.getAllSignalements()
                 .stream()
-                .filter(s -> s.getType() == Signalement.Type.NON_PERTINENTE)
+                .filter(s -> TYPE_NON_PERTINENTE.equals(s.getType()))
                 .toList();
 
         return ResponseEntity.ok(signalements);
     }
 
-    // 🔹 Récupérer les statistiques de signalement pour une tâche
+    // 🔹 Statistiques de signalement pour une tâche
     @GetMapping("/tache/{idTache}/statistiques")
     public ResponseEntity<?> getSignalementStatistiques(@PathVariable("idTache") int idTache) {
-        // Vérifier que la tâche existe
         if (tacheService.getTacheById(idTache).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Tâche introuvable"));
         }
@@ -260,11 +291,11 @@ public class SignalementController {
                 .toList();
 
         long validees = signalements.stream()
-                .filter(s -> s.getType() == Signalement.Type.VALIDEE)
+                .filter(s -> TYPE_VALIDEE.equals(s.getType()))
                 .count();
 
         long nonPertinentes = signalements.stream()
-                .filter(s -> s.getType() == Signalement.Type.NON_PERTINENTE)
+                .filter(s -> TYPE_NON_PERTINENTE.equals(s.getType()))
                 .count();
 
         return ResponseEntity.ok(Map.of(
@@ -272,17 +303,21 @@ public class SignalementController {
                 "total", signalements.size(),
                 "validees", validees,
                 "non_pertinentes", nonPertinentes,
-                "taux_validation", signalements.isEmpty() ? 0 : (validees * 100.0 / signalements.size())
+                "taux_validation",
+                signalements.isEmpty() ? 0 : (validees * 100.0 / signalements.size())
         ));
     }
 
-    // 🔹 Récupérer les signalements par marché (via les tâches)
+    // 🔹 Signalements par marché (via les tâches)
     @GetMapping("/marche/{idMarche}")
     public ResponseEntity<?> getSignalementsByMarche(@PathVariable("idMarche") int idMarche) {
-        // Récupérer toutes les tâches du marché
+
+        // Récupérer toutes les tâches du marché (Tache.marche est un objet)
         List<Integer> tacheIds = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getId_marche().equals(idMarche))
+                .filter(t -> t.getMarche() != null &&
+                        t.getMarche().getId_marche() != null &&
+                        t.getMarche().getId_marche().equals(idMarche))
                 .map(Tache::getId_tache)
                 .toList();
 
@@ -290,7 +325,6 @@ public class SignalementController {
             return ResponseEntity.ok(List.of());
         }
 
-        // Récupérer tous les signalements pour ces tâches
         List<Signalement> signalements = signalementService.getAllSignalements()
                 .stream()
                 .filter(s -> tacheIds.contains(s.getTache().getId_tache()))
@@ -303,12 +337,11 @@ public class SignalementController {
     @GetMapping("/tache/{idTache}/employe/{idEmploye}/existe")
     public ResponseEntity<?> checkSignalementExists(@PathVariable("idTache") int idTache,
                                                     @PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que la tâche existe
+
         if (tacheService.getTacheById(idTache).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Tâche introuvable"));
         }
 
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -329,7 +362,7 @@ public class SignalementController {
         }
     }
 
-    // 🔹 Récupérer les signalements récents (dernières 24h)
+    // 🔹 Signalements récents (dernières 24h)
     @GetMapping("/recents")
     public ResponseEntity<List<Signalement>> getSignalementsRecents() {
         LocalDateTime dernieres24h = LocalDateTime.now().minusHours(24);

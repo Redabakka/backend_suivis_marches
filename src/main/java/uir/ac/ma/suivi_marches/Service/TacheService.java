@@ -1,19 +1,18 @@
 package uir.ac.ma.suivi_marches.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uir.ac.ma.suivi_marches.model.Tache;
 import uir.ac.ma.suivi_marches.Repository.TacheRepo;
+import uir.ac.ma.suivi_marches.model.Tache;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class TacheService {
-    TacheRepo tacheRepo;
 
-    @Autowired
+    private final TacheRepo tacheRepo;
+
     public TacheService(TacheRepo tacheRepo) {
         this.tacheRepo = tacheRepo;
     }

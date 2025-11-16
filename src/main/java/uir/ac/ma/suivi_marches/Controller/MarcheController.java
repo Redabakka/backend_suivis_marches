@@ -57,32 +57,45 @@ public class MarcheController {
     public ResponseEntity<?> addMarche(@RequestBody Map<String, Object> request) {
         try {
             // Récupération des données
-            String intitule = request.get("intitule").toString();
-            String objectif = request.containsKey("objectif") ? request.get("objectif").toString() : null;
-            BigDecimal budgetEstime = new BigDecimal(request.get("budgetEstime").toString());
+            String intitule = request.get("intitule") != null ? request.get("intitule").toString() : null;
+            String objectif = request.get("objectif") != null ? request.get("objectif").toString() : null;
+            BigDecimal budgetEstime = request.get("budgetEstime") != null
+                    ? new BigDecimal(request.get("budgetEstime").toString())
+                    : null;
             LocalDate dateDebut = LocalDate.parse(request.get("dateDebut").toString());
             LocalDate dateFin = LocalDate.parse(request.get("dateFin").toString());
             String statutStr = request.get("statut").toString();
             int idService = Integer.parseInt(request.get("idService").toString());
-            String fichierCpsPath = request.containsKey("fichierCpsPath") ?
-                    request.get("fichierCpsPath").toString() : null;
+            String fichierCpsPath = request.get("fichierCpsPath") != null
+                    ? request.get("fichierCpsPath").toString()
+                    : null;
             int idCreatedBy = Integer.parseInt(request.get("idCreatedBy").toString());
 
-            // Validations
+            // 🔸 Validations
             if (intitule == null || intitule.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "L'intitulé est obligatoire"));
             }
-            if (intitule.length() > 255) {
-                return ResponseEntity.badRequest().body(Map.of("message", "L'intitulé ne doit pas dépasser 255 caractères"));
+            if (intitule.length() > 200) { // DB: VARCHAR(200)
+                return ResponseEntity.badRequest().body(Map.of("message", "L'intitulé ne doit pas dépasser 200 caractères"));
             }
-            if (budgetEstime.compareTo(BigDecimal.ZERO) < 0) {
+
+            if (objectif == null || objectif.trim().isEmpty()) { // DB: NOT NULL
+                return ResponseEntity.badRequest().body(Map.of("message", "L'objectif est obligatoire"));
+            }
+
+            if (budgetEstime != null && budgetEstime.compareTo(BigDecimal.ZERO) < 0) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Le budget estimé ne peut pas être négatif"));
             }
+
             if (dateFin.isBefore(dateDebut)) {
                 return ResponseEntity.badRequest().body(Map.of("message", "La date de fin doit être après la date de début"));
             }
-            if (fichierCpsPath != null && fichierCpsPath.length() > 500) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le chemin du fichier ne doit pas dépasser 500 caractères"));
+
+            if (fichierCpsPath == null || fichierCpsPath.trim().isEmpty()) { // DB: NOT NULL
+                return ResponseEntity.badRequest().body(Map.of("message", "Le chemin du fichier CPS est obligatoire"));
+            }
+            if (fichierCpsPath.length() > 255) { // DB: VARCHAR(255)
+                return ResponseEntity.badRequest().body(Map.of("message", "Le chemin du fichier ne doit pas dépasser 255 caractères"));
             }
 
             // Vérifier que le service existe
@@ -98,19 +111,22 @@ public class MarcheController {
             try {
                 statut = Marche.Statut.valueOf(statutStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Statut invalide (attendu: EN_PREPARATION, EN_COURS, TERMINE, ANNULE)"));
+                return ResponseEntity.badRequest().body(Map.of(
+                        "message",
+                        "Statut invalide (attendu: EN_PREPARATION, EN_COURS, TERMINE, ANNULE)"
+                ));
             }
 
             // Créer le marché
             Marche marche = new Marche();
             marche.setIntitule(intitule.trim());
-            marche.setObjectif(objectif);
+            marche.setObjectif(objectif.trim());
             marche.setBudget_estime(budgetEstime);
             marche.setDate_debut(dateDebut);
             marche.setDate_fin(dateFin);
             marche.setStatut(statut);
             marche.setService(service);
-            marche.setFichier_cps_path(fichierCpsPath);
+            marche.setFichier_cps_path(fichierCpsPath.trim());
             marche.setCreated_by(createdBy);
             marche.setCreated_at(LocalDateTime.now());
 
@@ -143,23 +159,28 @@ public class MarcheController {
         try {
             Marche marche = existingMarche.get();
 
-            // Mettre à jour les champs si présents
+            // intitule
             if (request.containsKey("intitule")) {
                 String intitule = request.get("intitule").toString();
                 if (intitule == null || intitule.trim().isEmpty()) {
                     return ResponseEntity.badRequest().body(Map.of("message", "L'intitulé ne peut pas être vide"));
                 }
-                if (intitule.length() > 255) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "L'intitulé ne doit pas dépasser 255 caractères"));
+                if (intitule.length() > 200) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "L'intitulé ne doit pas dépasser 200 caractères"));
                 }
                 marche.setIntitule(intitule.trim());
             }
 
+            // objectif (NOT NULL en DB, donc on n'accepte pas un vrai null ici)
             if (request.containsKey("objectif")) {
                 String objectif = request.get("objectif").toString();
-                marche.setObjectif(objectif);
+                if (objectif == null || objectif.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "L'objectif ne peut pas être vide"));
+                }
+                marche.setObjectif(objectif.trim());
             }
 
+            // budget
             if (request.containsKey("budgetEstime")) {
                 BigDecimal budgetEstime = new BigDecimal(request.get("budgetEstime").toString());
                 if (budgetEstime.compareTo(BigDecimal.ZERO) < 0) {
@@ -168,6 +189,7 @@ public class MarcheController {
                 marche.setBudget_estime(budgetEstime);
             }
 
+            // dateDebut
             if (request.containsKey("dateDebut")) {
                 LocalDate dateDebut = LocalDate.parse(request.get("dateDebut").toString());
                 if (marche.getDate_fin() != null && dateDebut.isAfter(marche.getDate_fin())) {
@@ -176,6 +198,7 @@ public class MarcheController {
                 marche.setDate_debut(dateDebut);
             }
 
+            // dateFin
             if (request.containsKey("dateFin")) {
                 LocalDate dateFin = LocalDate.parse(request.get("dateFin").toString());
                 if (marche.getDate_debut() != null && dateFin.isBefore(marche.getDate_debut())) {
@@ -184,16 +207,21 @@ public class MarcheController {
                 marche.setDate_fin(dateFin);
             }
 
+            // statut
             if (request.containsKey("statut")) {
                 String statutStr = request.get("statut").toString();
                 try {
                     Marche.Statut statut = Marche.Statut.valueOf(statutStr.toUpperCase());
                     marche.setStatut(statut);
                 } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Statut invalide (attendu: EN_PREPARATION, EN_COURS, TERMINE, ANNULE)"));
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "message",
+                            "Statut invalide (attendu: EN_PREPARATION, EN_COURS, TERMINE, ANNULE)"
+                    ));
                 }
             }
 
+            // service
             if (request.containsKey("idService")) {
                 int idService = Integer.parseInt(request.get("idService").toString());
                 uir.ac.ma.suivi_marches.model.Service service = serviceService.getServiceById(idService)
@@ -201,12 +229,16 @@ public class MarcheController {
                 marche.setService(service);
             }
 
+            // fichierCpsPath (NOT NULL en DB)
             if (request.containsKey("fichierCpsPath")) {
                 String fichierCpsPath = request.get("fichierCpsPath").toString();
-                if (fichierCpsPath != null && fichierCpsPath.length() > 500) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le chemin du fichier ne doit pas dépasser 500 caractères"));
+                if (fichierCpsPath == null || fichierCpsPath.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Le chemin du fichier CPS ne peut pas être vide"));
                 }
-                marche.setFichier_cps_path(fichierCpsPath);
+                if (fichierCpsPath.length() > 255) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Le chemin du fichier ne doit pas dépasser 255 caractères"));
+                }
+                marche.setFichier_cps_path(fichierCpsPath.trim());
             }
 
             Marche updatedMarche = marcheService.modifyMarche(marche);

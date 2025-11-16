@@ -29,38 +29,46 @@ public class NotificationController {
     // 🔹 Récupérer toutes les notifications
     @GetMapping
     public ResponseEntity<List<Notification>> getAllNotifications() {
-        List<Notification> notifications = notificationService.getAllNotifications();
-        return ResponseEntity.ok(notifications);
+        return ResponseEntity.ok(notificationService.getAllNotifications());
     }
 
     // 🔹 Récupérer une notification par ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getNotificationById(@PathVariable("id") int idNotification) {
-        Optional<Notification> notification = notificationService.getNotificationById(idNotification);
-
-        if (notification.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("message", "Notification introuvable"));
-        }
-
-        return ResponseEntity.ok(notification.get());
+        return notificationService.getNotificationById(idNotification)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404)
+                        .body(Map.of("message", "Notification introuvable")));
     }
 
     // 🔹 Ajouter une nouvelle notification
     @PostMapping
     public ResponseEntity<?> addNotification(@RequestBody Map<String, Object> request) {
         try {
-            // Récupération des données
+            if (!request.containsKey("idEmploye") ||
+                    !request.containsKey("type") ||
+                    !request.containsKey("message")) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Champs obligatoires : idEmploye, type, message")
+                );
+            }
+
             int idEmploye = Integer.parseInt(request.get("idEmploye").toString());
             String typeStr = request.get("type").toString();
             String message = request.get("message").toString();
-            boolean lu = request.containsKey("lu") && Boolean.parseBoolean(request.get("lu").toString());
+            boolean lu = request.containsKey("lu") &&
+                    Boolean.parseBoolean(request.get("lu").toString());
 
-            // Validations
+            // Validations message
             if (message == null || message.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le message est obligatoire"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Le message est obligatoire")
+                );
             }
             if (message.length() > 1000) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le message ne doit pas dépasser 1000 caractères"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Le message ne doit pas dépasser 1000 caractères")
+                );
             }
 
             // Vérifier que l'employé existe
@@ -72,7 +80,10 @@ public class NotificationController {
             try {
                 type = Notification.Type.valueOf(typeStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Type invalide (attendu: INFO, AVERTISSEMENT, TACHE, APPROBATION, AUTRE)"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("message",
+                                "Type invalide (attendu: INFO, AVERTISSEMENT, TACHE, APPROBATION, AUTRE)")
+                );
             }
 
             // Créer la notification
@@ -83,19 +94,19 @@ public class NotificationController {
             notification.setLu(lu);
             notification.setDate_envoi(LocalDateTime.now());
 
-            Notification savedNotification = notificationService.addNotification(notification);
+            Notification saved = notificationService.addNotification(notification);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Notification créée avec succès",
-                    "id_notification", savedNotification.getId_notification()
+                    "id_notification", saved.getId_notification()
             ));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la création: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la création: " + e.getMessage())
+            );
         }
     }
 
@@ -103,33 +114,39 @@ public class NotificationController {
     @PutMapping("/{id}")
     public ResponseEntity<?> modifyNotification(@PathVariable("id") int idNotification,
                                                 @RequestBody Map<String, Object> request) {
-        Optional<Notification> existingNotification = notificationService.getNotificationById(idNotification);
+        Optional<Notification> existing = notificationService.getNotificationById(idNotification);
 
-        if (existingNotification.isEmpty()) {
+        if (existing.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Notification introuvable"));
         }
 
         try {
-            Notification notification = existingNotification.get();
+            Notification notification = existing.get();
 
-            // Mettre à jour les champs si présents
             if (request.containsKey("type")) {
                 String typeStr = request.get("type").toString();
                 try {
                     Notification.Type type = Notification.Type.valueOf(typeStr.toUpperCase());
                     notification.setType(type);
                 } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Type invalide (attendu: INFO, AVERTISSEMENT, TACHE, APPROBATION, AUTRE)"));
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message",
+                                    "Type invalide (attendu: INFO, AVERTISSEMENT, TACHE, APPROBATION, AUTRE)")
+                    );
                 }
             }
 
             if (request.containsKey("message")) {
                 String message = request.get("message").toString();
                 if (message == null || message.trim().isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le message ne peut pas être vide"));
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message", "Le message ne peut pas être vide")
+                    );
                 }
                 if (message.length() > 1000) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le message ne doit pas dépasser 1000 caractères"));
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message", "Le message ne doit pas dépasser 1000 caractères")
+                    );
                 }
                 notification.setMessage(message.trim());
             }
@@ -139,65 +156,65 @@ public class NotificationController {
                 notification.setLu(lu);
             }
 
-            Notification updatedNotification = notificationService.modifyNotification(notification);
+            Notification updated = notificationService.modifyNotification(notification);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Notification modifiée avec succès",
-                    "notification", updatedNotification
+                    "notification", updated
             ));
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la modification: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la modification: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Marquer une notification comme lue
+    // 🔹 Marquer comme lue
     @PatchMapping("/{id}/marquer-lu")
     public ResponseEntity<?> markAsRead(@PathVariable("id") int idNotification) {
-        Optional<Notification> existingNotification = notificationService.getNotificationById(idNotification);
+        Optional<Notification> existing = notificationService.getNotificationById(idNotification);
 
-        if (existingNotification.isEmpty()) {
+        if (existing.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Notification introuvable"));
         }
 
         try {
-            Notification notification = existingNotification.get();
+            Notification notification = existing.get();
             notification.setLu(true);
             notificationService.modifyNotification(notification);
 
             return ResponseEntity.ok(Map.of("message", "Notification marquée comme lue"));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la mise à jour: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la mise à jour: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Marquer une notification comme non lue
+    // 🔹 Marquer comme non lue
     @PatchMapping("/{id}/marquer-non-lu")
     public ResponseEntity<?> markAsUnread(@PathVariable("id") int idNotification) {
-        Optional<Notification> existingNotification = notificationService.getNotificationById(idNotification);
+        Optional<Notification> existing = notificationService.getNotificationById(idNotification);
 
-        if (existingNotification.isEmpty()) {
+        if (existing.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Notification introuvable"));
         }
 
         try {
-            Notification notification = existingNotification.get();
+            Notification notification = existing.get();
             notification.setLu(false);
             notificationService.modifyNotification(notification);
 
             return ResponseEntity.ok(Map.of("message", "Notification marquée comme non lue"));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la mise à jour: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la mise à jour: " + e.getMessage())
+            );
         }
     }
 
@@ -215,16 +232,15 @@ public class NotificationController {
             return ResponseEntity.ok(Map.of("message", "Notification supprimée avec succès"));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la suppression: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la suppression: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Récupérer les notifications par employé
+    // 🔹 Notifications par employé
     @GetMapping("/employe/{idEmploye}")
     public ResponseEntity<?> getNotificationsByEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -237,10 +253,9 @@ public class NotificationController {
         return ResponseEntity.ok(notifications);
     }
 
-    // 🔹 Récupérer les notifications non lues par employé
+    // 🔹 Notifications non lues par employé
     @GetMapping("/employe/{idEmploye}/non-lues")
     public ResponseEntity<?> getUnreadNotificationsByEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -253,10 +268,9 @@ public class NotificationController {
         return ResponseEntity.ok(notifications);
     }
 
-    // 🔹 Récupérer les notifications lues par employé
+    // 🔹 Notifications lues par employé
     @GetMapping("/employe/{idEmploye}/lues")
     public ResponseEntity<?> getReadNotificationsByEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -269,7 +283,7 @@ public class NotificationController {
         return ResponseEntity.ok(notifications);
     }
 
-    // 🔹 Récupérer les notifications par type
+    // 🔹 Notifications par type
     @GetMapping("/type/{type}")
     public ResponseEntity<?> getNotificationsByType(@PathVariable("type") String typeStr) {
         try {
@@ -283,14 +297,16 @@ public class NotificationController {
             return ResponseEntity.ok(notifications);
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Type invalide (attendu: INFO, AVERTISSEMENT, TACHE, APPROBATION, AUTRE)"));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message",
+                            "Type invalide (attendu: INFO, AVERTISSEMENT, TACHE, APPROBATION, AUTRE)")
+            );
         }
     }
 
     // 🔹 Compter les notifications non lues par employé
     @GetMapping("/employe/{idEmploye}/non-lues/count")
     public ResponseEntity<?> countUnreadNotifications(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -309,7 +325,6 @@ public class NotificationController {
     // 🔹 Marquer toutes les notifications comme lues pour un employé
     @PatchMapping("/employe/{idEmploye}/marquer-toutes-lues")
     public ResponseEntity<?> markAllAsReadForEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -331,16 +346,15 @@ public class NotificationController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la mise à jour: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la mise à jour: " + e.getMessage())
+            );
         }
     }
 
     // 🔹 Supprimer toutes les notifications lues pour un employé
     @DeleteMapping("/employe/{idEmploye}/supprimer-lues")
     public ResponseEntity<?> deleteReadNotificationsForEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
@@ -361,13 +375,13 @@ public class NotificationController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la suppression: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la suppression: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Récupérer les notifications récentes (dernières 7 jours)
+    // 🔹 Notifications récentes (7 derniers jours)
     @GetMapping("/recentes")
     public ResponseEntity<List<Notification>> getRecentNotifications() {
         LocalDateTime derniersSeptJours = LocalDateTime.now().minusDays(7);
@@ -380,10 +394,9 @@ public class NotificationController {
         return ResponseEntity.ok(notifications);
     }
 
-    // 🔹 Récupérer les notifications récentes par employé (dernières 7 jours)
+    // 🔹 Notifications récentes par employé
     @GetMapping("/employe/{idEmploye}/recentes")
     public ResponseEntity<?> getRecentNotificationsByEmploye(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }

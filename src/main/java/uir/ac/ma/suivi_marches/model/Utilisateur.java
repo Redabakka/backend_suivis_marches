@@ -14,21 +14,20 @@ public class Utilisateur {
     @Column(name = "id_user")
     private Integer id_user;
 
-    // Relation optionnelle vers Employe (clé étrangère id_employe)
     @OneToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "id_employe", foreignKey = @ForeignKey(name = "fk_utilisateur_employe"))
-    private Employe employe;  // <-- remplace l'ancien Integer id_employe
+    @JoinColumn(name = "id_employe", foreignKey = @ForeignKey(name = "fk_utilisateur_employe"), unique = true)
+    private Employe employe;
 
-    @Column(name = "username", nullable = false, length = 100)
+    @Column(name = "username", nullable = false, length = 80)
     private String username;
 
-    // Hash BCRYPT ~60 caractères
     @Column(name = "password_hash", nullable = false, length = 100)
     private String password_hash;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, columnDefinition = "role_type")
-    private Role role; // ADMIN | CHEF | EMPLOYE
+    @Column(name = "role", nullable = false, length = 20)
+    private Role role; // ADMIN, CHEF, EMPLOYE
+
 
     public enum Role {ADMIN, CHEF, EMPLOYE}
 

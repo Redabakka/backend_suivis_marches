@@ -1,10 +1,12 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "employe")
 public class Employe {
@@ -27,15 +29,16 @@ public class Employe {
     @Column(name = "role", nullable = false, length = 20)
     private Role role;  // ADMIN | CHEF | EMPLOYE
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "id_service", nullable = false, foreignKey = @ForeignKey(name = "fk_employe_service"))
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_service", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_employe_service"))
     private Service service;
 
     @Column(name = "actif", nullable = false)
     private boolean actif = true;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime created_at = LocalDateTime.now();
+    private LocalDateTime created_at;
 
     public enum Role {
         ADMIN, CHEF, EMPLOYE
@@ -44,8 +47,14 @@ public class Employe {
     public Employe() {
     }
 
-    public Employe(Integer id_employe, String nom, String prenom, String email, Role role,
-                   Service service, boolean actif, LocalDateTime created_at) {
+    public Employe(Integer id_employe,
+                   String nom,
+                   String prenom,
+                   String email,
+                   Role role,
+                   Service service,
+                   boolean actif,
+                   LocalDateTime created_at) {
         this.id_employe = id_employe;
         this.nom = nom;
         this.prenom = prenom;
@@ -54,6 +63,13 @@ public class Employe {
         this.service = service;
         this.actif = actif;
         this.created_at = created_at;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (created_at == null) {
+            created_at = LocalDateTime.now();
+        }
     }
 
     // --- Getters & Setters ---

@@ -3,6 +3,7 @@ package uir.ac.ma.suivi_marches.Controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uir.ac.ma.suivi_marches.Service.ServiceService;
+import uir.ac.ma.suivi_marches.model.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -21,15 +22,15 @@ public class ServiceController {
 
     // 🔹 Récupérer tous les services
     @GetMapping
-    public ResponseEntity<List<uir.ac.ma.suivi_marches.model.Service>> getAllServices() {
-        List<uir.ac.ma.suivi_marches.model.Service> services = serviceService.getAllServices();
+    public ResponseEntity<List<Service>> getAllServices() {
+        List<Service> services = serviceService.getAllServices();
         return ResponseEntity.ok(services);
     }
 
     // 🔹 Récupérer un service par ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getServiceById(@PathVariable("id") int idService) {
-        Optional<uir.ac.ma.suivi_marches.model.Service> service = serviceService.getServiceById(idService);
+        Optional<Service> service = serviceService.getServiceById(idService);
 
         if (service.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Service introuvable"));
@@ -42,30 +43,37 @@ public class ServiceController {
     @PostMapping
     public ResponseEntity<?> addService(@RequestBody Map<String, Object> request) {
         try {
-            String nom = request.get("nom").toString();
-            String description = request.containsKey("description") ?
-                    request.get("description").toString() : null;
-            boolean actif = !request.containsKey("actif") || Boolean.parseBoolean(request.get("actif").toString());
+            String nom = request.get("nom") != null ? request.get("nom").toString() : null;
+            String description = request.containsKey("description")
+                    ? request.get("description").toString()
+                    : null;
+            boolean actif = !request.containsKey("actif")
+                    || Boolean.parseBoolean(request.get("actif").toString());
 
             // Validation
             if (nom == null || nom.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le nom du service est obligatoire"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Le nom du service est obligatoire"));
             }
 
-            if (nom.length() > 150) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le nom ne doit pas dépasser 150 caractères"));
+            // DB : VARCHAR(100)
+            if (nom.length() > 100) {
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "Le nom ne doit pas dépasser 100 caractères"));
             }
 
+            // Règle métier : description max 500 (tu peux enlever si tu veux illimité)
             if (description != null && description.length() > 500) {
-                return ResponseEntity.badRequest().body(Map.of("message", "La description ne doit pas dépasser 500 caractères"));
+                return ResponseEntity.badRequest().body(
+                        Map.of("message", "La description ne doit pas dépasser 500 caractères"));
             }
 
-            uir.ac.ma.suivi_marches.model.Service service = new uir.ac.ma.suivi_marches.model.Service();
+            Service service = new Service();
             service.setNom(nom.trim());
             service.setDescription(description);
             service.setActif(actif);
 
-            uir.ac.ma.suivi_marches.model.Service savedService = serviceService.addService(service);
+            Service savedService = serviceService.addService(service);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Service créé avec succès",
@@ -73,9 +81,9 @@ public class ServiceController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la création: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la création: " + e.getMessage())
+            );
         }
     }
 
@@ -83,31 +91,35 @@ public class ServiceController {
     @PutMapping("/{id}")
     public ResponseEntity<?> modifyService(@PathVariable("id") int idService,
                                            @RequestBody Map<String, Object> request) {
-        Optional<uir.ac.ma.suivi_marches.model.Service> existingService = serviceService.getServiceById(idService);
+        Optional<Service> existingService = serviceService.getServiceById(idService);
 
         if (existingService.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Service introuvable"));
         }
 
         try {
-            uir.ac.ma.suivi_marches.model.Service service = existingService.get();
+            Service service = existingService.get();
 
-            // Mettre à jour les champs si présents
             if (request.containsKey("nom")) {
-                String nom = request.get("nom").toString();
+                String nom = request.get("nom") != null ? request.get("nom").toString() : null;
                 if (nom == null || nom.trim().isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le nom du service ne peut pas être vide"));
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message", "Le nom du service ne peut pas être vide"));
                 }
-                if (nom.length() > 150) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le nom ne doit pas dépasser 150 caractères"));
+                if (nom.length() > 100) {
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message", "Le nom ne doit pas dépasser 100 caractères"));
                 }
                 service.setNom(nom.trim());
             }
 
             if (request.containsKey("description")) {
-                String description = request.get("description").toString();
+                String description = request.get("description") != null
+                        ? request.get("description").toString()
+                        : null;
                 if (description != null && description.length() > 500) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "La description ne doit pas dépasser 500 caractères"));
+                    return ResponseEntity.badRequest().body(
+                            Map.of("message", "La description ne doit pas dépasser 500 caractères"));
                 }
                 service.setDescription(description);
             }
@@ -117,7 +129,7 @@ public class ServiceController {
                 service.setActif(actif);
             }
 
-            uir.ac.ma.suivi_marches.model.Service updatedService = serviceService.modifyService(service);
+            Service updatedService = serviceService.modifyService(service);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Service modifié avec succès",
@@ -125,40 +137,39 @@ public class ServiceController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la modification: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la modification: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Supprimer un service (soft delete - marquer comme inactif)
+    // 🔹 Supprimer (soft delete) : marquer inactif
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteService(@PathVariable("id") int idService) {
-        Optional<uir.ac.ma.suivi_marches.model.Service> service = serviceService.getServiceById(idService);
+        Optional<Service> service = serviceService.getServiceById(idService);
 
         if (service.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Service introuvable"));
         }
 
         try {
-            // Soft delete: marquer comme inactif au lieu de supprimer
-            uir.ac.ma.suivi_marches.model.Service existingService = service.get();
+            Service existingService = service.get();
             existingService.setActif(false);
             serviceService.modifyService(existingService);
 
             return ResponseEntity.ok(Map.of("message", "Service désactivé avec succès"));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la désactivation: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la désactivation: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Supprimer définitivement un service (hard delete)
+    // 🔹 Supprimer définitivement (hard delete)
     @DeleteMapping("/{id}/permanent")
     public ResponseEntity<?> permanentDeleteService(@PathVariable("id") int idService) {
-        Optional<uir.ac.ma.suivi_marches.model.Service> service = serviceService.getServiceById(idService);
+        Optional<Service> service = serviceService.getServiceById(idService);
 
         if (service.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Service introuvable"));
@@ -169,18 +180,18 @@ public class ServiceController {
             return ResponseEntity.ok(Map.of("message", "Service supprimé définitivement"));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "message", "Erreur lors de la suppression: " + e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", "Erreur lors de la suppression: " + e.getMessage())
+            );
         }
     }
 
-    // 🔹 Récupérer uniquement les services actifs
+    // 🔹 Services actifs
     @GetMapping("/actifs")
-    public ResponseEntity<List<uir.ac.ma.suivi_marches.model.Service>> getActiveServices() {
-        List<uir.ac.ma.suivi_marches.model.Service> services = serviceService.getAllServices()
+    public ResponseEntity<List<Service>> getActiveServices() {
+        List<Service> services = serviceService.getAllServices()
                 .stream()
-                .filter(uir.ac.ma.suivi_marches.model.Service::isActif)
+                .filter(Service::isActif)
                 .toList();
         return ResponseEntity.ok(services);
     }

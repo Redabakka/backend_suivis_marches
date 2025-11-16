@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import uir.ac.ma.suivi_marches.Service.TacheService;
 import uir.ac.ma.suivi_marches.Service.MarcheService;
 import uir.ac.ma.suivi_marches.Service.EmployeService;
+import uir.ac.ma.suivi_marches.model.Employe;
+import uir.ac.ma.suivi_marches.model.Marche;
 import uir.ac.ma.suivi_marches.model.Tache;
 
 import java.time.LocalDate;
@@ -24,10 +26,13 @@ public class TacheController {
     private final MarcheService marcheService;
     private final EmployeService employeService;
 
-    // Enums constants
-    private static final List<String> VALID_ETATS = Arrays.asList("En attente", "En cours", "Validée", "Non validée");
-    private static final List<String> VALID_PRIORITES = Arrays.asList("Urgent", "Quotidien", "Informatif");
-    private static final List<String> VALID_PERTINENCES = Arrays.asList("Pertinente", "Non pertinente", "À revoir");
+    // Valeurs autorisées (doivent matcher le CHECK Postgres)
+    private static final List<String> VALID_ETATS =
+            Arrays.asList("En attente", "En cours", "Validée", "Non validée");
+    private static final List<String> VALID_PRIORITES =
+            Arrays.asList("Urgent", "Quotidien", "Informatif");
+    private static final List<String> VALID_PERTINENCES =
+            Arrays.asList("Pertinente", "Non pertinente", "À revoir");
 
     public TacheController(TacheService tacheService,
                            MarcheService marcheService,
@@ -40,8 +45,7 @@ public class TacheController {
     // 🔹 Récupérer toutes les tâches
     @GetMapping
     public ResponseEntity<List<Tache>> getAllTaches() {
-        List<Tache> taches = tacheService.getAllTaches();
-        return ResponseEntity.ok(taches);
+        return ResponseEntity.ok(tacheService.getAllTaches());
     }
 
     // 🔹 Récupérer une tâche par ID
@@ -60,44 +64,72 @@ public class TacheController {
     @PostMapping
     public ResponseEntity<?> addTache(@RequestBody Map<String, Object> request) {
         try {
-            // Récupération des données
+            // Champs obligatoires
+            if (!request.containsKey("idMarche") ||
+                    !request.containsKey("titre") ||
+                    !request.containsKey("dateDebut") ||
+                    !request.containsKey("dateFin") ||
+                    !request.containsKey("responsable") ||
+                    !request.containsKey("etat") ||
+                    !request.containsKey("priorite")) {
+
+                return ResponseEntity.badRequest().body(
+                        Map.of("message",
+                                "Champs obligatoires : idMarche, titre, dateDebut, dateFin, responsable, etat, priorite")
+                );
+            }
+
             int idMarche = Integer.parseInt(request.get("idMarche").toString());
             String titre = request.get("titre").toString();
-            String description = request.containsKey("description") ? request.get("description").toString() : null;
-            LocalDate dateDebut = request.containsKey("dateDebut") ?
-                    LocalDate.parse(request.get("dateDebut").toString()) : null;
-            LocalDate dateFin = request.containsKey("dateFin") ?
-                    LocalDate.parse(request.get("dateFin").toString()) : null;
-            int dureeEstimee = Integer.parseInt(request.get("dureeEstimee").toString());
-            int responsable = Integer.parseInt(request.get("responsable").toString());
+            String description = request.containsKey("description")
+                    ? String.valueOf(request.get("description"))
+                    : null;
+
+            LocalDate dateDebut = LocalDate.parse(request.get("dateDebut").toString());
+            LocalDate dateFin = LocalDate.parse(request.get("dateFin").toString());
+
+            // dureeEstimee peut être null
+            Integer dureeEstimee = null;
+            if (request.containsKey("dureeEstimee") && request.get("dureeEstimee") != null) {
+                String val = request.get("dureeEstimee").toString();
+                if (!val.isBlank()) {
+                    dureeEstimee = Integer.parseInt(val);
+                }
+            }
+
+            int idResponsable = Integer.parseInt(request.get("responsable").toString());
             String etat = request.get("etat").toString();
             String priorite = request.get("priorite").toString();
-            boolean critique = request.containsKey("critique") && Boolean.parseBoolean(request.get("critique").toString());
-            String pertinence = request.get("pertinence").toString();
 
-            // Validations
+            boolean critique = request.containsKey("critique") &&
+                    Boolean.parseBoolean(request.get("critique").toString());
+
+            String pertinence = null;
+            if (request.containsKey("pertinence") && request.get("pertinence") != null) {
+                pertinence = request.get("pertinence").toString();
+            }
+
+            // 🔹 Validations
             if (titre == null || titre.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Le titre est obligatoire"));
             }
-            if (titre.length() > 255) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Le titre ne doit pas dépasser 255 caractères"));
+            if (titre.length() > 200) { // DB = VARCHAR(200)
+                return ResponseEntity.badRequest().body(Map.of("message", "Le titre ne doit pas dépasser 200 caractères"));
             }
-            if (dureeEstimee < 0) {
+            if (dureeEstimee != null && dureeEstimee < 0) {
                 return ResponseEntity.badRequest().body(Map.of("message", "La durée estimée ne peut pas être négative"));
             }
-            if (dateDebut != null && dateFin != null && dateFin.isBefore(dateDebut)) {
+            if (dateFin.isBefore(dateDebut)) {
                 return ResponseEntity.badRequest().body(Map.of("message", "La date de fin doit être après la date de début"));
             }
 
             // Vérifier que le marché existe
-            if (marcheService.getMarcheById(idMarche).isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("message", "Marché introuvable: " + idMarche));
-            }
+            Marche marche = marcheService.getMarcheById(idMarche)
+                    .orElseThrow(() -> new IllegalArgumentException("Marché introuvable: " + idMarche));
 
             // Vérifier que l'employé responsable existe
-            if (employeService.getEmployeById(responsable).isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of("message", "Employé responsable introuvable: " + responsable));
-            }
+            Employe responsable = employeService.getEmployeById(idResponsable)
+                    .orElseThrow(() -> new IllegalArgumentException("Employé responsable introuvable: " + idResponsable));
 
             // Valider l'état
             if (!VALID_ETATS.contains(etat)) {
@@ -111,15 +143,15 @@ public class TacheController {
                         "Priorité invalide (attendu: Urgent, Quotidien, Informatif)"));
             }
 
-            // Valider la pertinence
-            if (!VALID_PERTINENCES.contains(pertinence)) {
+            // Valider la pertinence (si non null)
+            if (pertinence != null && !VALID_PERTINENCES.contains(pertinence)) {
                 return ResponseEntity.badRequest().body(Map.of("message",
                         "Pertinence invalide (attendu: Pertinente, Non pertinente, À revoir)"));
             }
 
             // Créer la tâche
             Tache tache = new Tache();
-            tache.setId_marche(idMarche);
+            tache.setMarche(marche);
             tache.setTitre(titre.trim());
             tache.setDescription(description);
             tache.setDate_debut(dateDebut);
@@ -152,29 +184,30 @@ public class TacheController {
     @PutMapping("/{id}")
     public ResponseEntity<?> modifyTache(@PathVariable("id") int idTache,
                                          @RequestBody Map<String, Object> request) {
-        Optional<Tache> existingTache = tacheService.getTacheById(idTache);
+        Optional<Tache> existingTacheOpt = tacheService.getTacheById(idTache);
 
-        if (existingTache.isEmpty()) {
+        if (existingTacheOpt.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Tâche introuvable"));
         }
 
         try {
-            Tache tache = existingTache.get();
+            Tache tache = existingTacheOpt.get();
 
-            // Mettre à jour les champs si présents
             if (request.containsKey("titre")) {
                 String titre = request.get("titre").toString();
                 if (titre == null || titre.trim().isEmpty()) {
                     return ResponseEntity.badRequest().body(Map.of("message", "Le titre ne peut pas être vide"));
                 }
-                if (titre.length() > 255) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "Le titre ne doit pas dépasser 255 caractères"));
+                if (titre.length() > 200) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Le titre ne doit pas dépasser 200 caractères"));
                 }
                 tache.setTitre(titre.trim());
             }
 
             if (request.containsKey("description")) {
-                String description = request.get("description").toString();
+                String description = request.get("description") != null
+                        ? request.get("description").toString()
+                        : null;
                 tache.setDescription(description);
             }
 
@@ -195,18 +228,23 @@ public class TacheController {
             }
 
             if (request.containsKey("dureeEstimee")) {
-                int dureeEstimee = Integer.parseInt(request.get("dureeEstimee").toString());
-                if (dureeEstimee < 0) {
+                Integer dureeEstimee = null;
+                if (request.get("dureeEstimee") != null) {
+                    String val = request.get("dureeEstimee").toString();
+                    if (!val.isBlank()) {
+                        dureeEstimee = Integer.parseInt(val);
+                    }
+                }
+                if (dureeEstimee != null && dureeEstimee < 0) {
                     return ResponseEntity.badRequest().body(Map.of("message", "La durée estimée ne peut pas être négative"));
                 }
                 tache.setDuree_estimee(dureeEstimee);
             }
 
             if (request.containsKey("responsable")) {
-                int responsable = Integer.parseInt(request.get("responsable").toString());
-                if (employeService.getEmployeById(responsable).isEmpty()) {
-                    return ResponseEntity.status(404).body(Map.of("message", "Employé responsable introuvable: " + responsable));
-                }
+                int idResponsable = Integer.parseInt(request.get("responsable").toString());
+                Employe responsable = employeService.getEmployeById(idResponsable)
+                        .orElseThrow(() -> new IllegalArgumentException("Employé responsable introuvable: " + idResponsable));
                 tache.setResponsable(responsable);
             }
 
@@ -234,8 +272,10 @@ public class TacheController {
             }
 
             if (request.containsKey("pertinence")) {
-                String pertinence = request.get("pertinence").toString();
-                if (!VALID_PERTINENCES.contains(pertinence)) {
+                String pertinence = request.get("pertinence") != null
+                        ? request.get("pertinence").toString()
+                        : null;
+                if (pertinence != null && !VALID_PERTINENCES.contains(pertinence)) {
                     return ResponseEntity.badRequest().body(Map.of("message",
                             "Pertinence invalide (attendu: Pertinente, Non pertinente, À revoir)"));
                 }
@@ -281,30 +321,32 @@ public class TacheController {
     // 🔹 Récupérer les tâches par marché
     @GetMapping("/marche/{idMarche}")
     public ResponseEntity<?> getTachesByMarche(@PathVariable("idMarche") int idMarche) {
-        // Vérifier que le marché existe
         if (marcheService.getMarcheById(idMarche).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Marché introuvable"));
         }
 
         List<Tache> taches = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getId_marche().equals(idMarche))
+                .filter(t -> t.getMarche() != null &&
+                        t.getMarche().getId_marche() != null &&
+                        t.getMarche().getId_marche().equals(idMarche))
                 .toList();
 
         return ResponseEntity.ok(taches);
     }
 
-    // 🔹 Récupérer les tâches par responsable (employé)
+    // 🔹 Récupérer les tâches par responsable
     @GetMapping("/responsable/{idEmploye}")
     public ResponseEntity<?> getTachesByResponsable(@PathVariable("idEmploye") int idEmploye) {
-        // Vérifier que l'employé existe
         if (employeService.getEmployeById(idEmploye).isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Employé introuvable"));
         }
 
         List<Tache> taches = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getResponsable().equals(idEmploye))
+                .filter(t -> t.getResponsable() != null &&
+                        t.getResponsable().getId_employe() != null &&
+                        t.getResponsable().getId_employe().equals(idEmploye))
                 .toList();
 
         return ResponseEntity.ok(taches);
@@ -320,7 +362,7 @@ public class TacheController {
 
         List<Tache> taches = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getEtat().equals(etat))
+                .filter(t -> etat.equals(t.getEtat()))
                 .toList();
 
         return ResponseEntity.ok(taches);
@@ -336,7 +378,7 @@ public class TacheController {
 
         List<Tache> taches = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getPriorite().equals(priorite))
+                .filter(t -> priorite.equals(t.getPriorite()))
                 .toList();
 
         return ResponseEntity.ok(taches);
@@ -363,7 +405,7 @@ public class TacheController {
 
         List<Tache> taches = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getPertinence().equals(pertinence))
+                .filter(t -> pertinence.equals(t.getPertinence()))
                 .toList();
 
         return ResponseEntity.ok(taches);
@@ -399,18 +441,18 @@ public class TacheController {
         }
     }
 
-    // 🔹 Récupérer les tâches urgentes et critiques
+    // 🔹 Tâches urgentes et critiques
     @GetMapping("/urgentes-critiques")
     public ResponseEntity<List<Tache>> getTachesUrgentesCritiques() {
         List<Tache> taches = tacheService.getAllTaches()
                 .stream()
-                .filter(t -> t.getPriorite().equals("Urgent") && t.isCritique())
+                .filter(t -> "Urgent".equals(t.getPriorite()) && t.isCritique())
                 .toList();
 
         return ResponseEntity.ok(taches);
     }
 
-    // 🔹 Récupérer les tâches en retard (date_fin passée et non validée)
+    // 🔹 Tâches en retard (date_fin passée et non validée)
     @GetMapping("/en-retard")
     public ResponseEntity<List<Tache>> getTachesEnRetard() {
         LocalDate today = LocalDate.now();
@@ -419,7 +461,7 @@ public class TacheController {
                 .stream()
                 .filter(t -> t.getDate_fin() != null &&
                         t.getDate_fin().isBefore(today) &&
-                        !t.getEtat().equals("Validée"))
+                        !"Validée".equals(t.getEtat()))
                 .toList();
 
         return ResponseEntity.ok(taches);

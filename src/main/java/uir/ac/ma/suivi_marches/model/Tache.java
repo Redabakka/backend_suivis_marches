@@ -1,11 +1,13 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "tache")
 public class Tache {
@@ -15,38 +17,48 @@ public class Tache {
     @Column(name = "id_tache")
     private Integer id_tache;
 
-    @Column(name = "id_marche", nullable = false)
-    private Integer id_marche;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "id_marche",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_tache_marche")
+    )
+    private Marche marche;
 
-    @Column(name = "titre", nullable = false, length = 255)
+    @Column(name = "titre", nullable = false, length = 200)
     private String titre;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "date_debut")
+    @Column(name = "date_debut", nullable = false)
     private LocalDate date_debut;
 
-    @Column(name = "date_fin")
+    @Column(name = "date_fin", nullable = false)
     private LocalDate date_fin;
 
-    @Column(name = "duree_estimee", nullable = false)
-    private Integer duree_estimee;
+    @Column(name = "duree_estimee")
+    private Integer duree_estimee; // peut être null
 
-    @Column(name = "responsable", nullable = false)
-    private Integer responsable; // id employe
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "responsable",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_tache_employe")
+    )
+    private Employe responsable;
 
-    @Column(name = "etat", nullable = false, length = 20)
-    private String etat;
+    @Column(name = "etat", nullable = false, length = 30)
+    private String etat;      // 'En attente' / 'En cours' / 'Validée' / 'Non validée'
 
     @Column(name = "priorite", nullable = false, length = 20)
-    private String priorite;
+    private String priorite;  // 'Urgent' / 'Quotidien' / 'Informatif'
 
     @Column(name = "critique", nullable = false)
     private boolean critique = false;
 
-    @Column(name = "pertinence", nullable = false, length = 20)
-    private String pertinence;
+    @Column(name = "pertinence", length = 20)
+    private String pertinence; // 'Pertinente' / 'Non pertinente' / 'À revoir' / null
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at = LocalDateTime.now();
@@ -54,12 +66,21 @@ public class Tache {
     public Tache() {
     }
 
-    public Tache(Integer id_tache, Integer id_marche, String titre, String description,
-                 LocalDate date_debut, LocalDate date_fin, Integer duree_estimee,
-                 Integer responsable, String etat, String priorite,
-                 boolean critique, String pertinence, LocalDateTime created_at) {
+    public Tache(Integer id_tache,
+                 Marche marche,
+                 String titre,
+                 String description,
+                 LocalDate date_debut,
+                 LocalDate date_fin,
+                 Integer duree_estimee,
+                 Employe responsable,
+                 String etat,
+                 String priorite,
+                 boolean critique,
+                 String pertinence,
+                 LocalDateTime created_at) {
         this.id_tache = id_tache;
-        this.id_marche = id_marche;
+        this.marche = marche;
         this.titre = titre;
         this.description = description;
         this.date_debut = date_debut;
@@ -74,6 +95,7 @@ public class Tache {
     }
 
     // Getters / Setters
+
     public Integer getId_tache() {
         return id_tache;
     }
@@ -82,12 +104,12 @@ public class Tache {
         this.id_tache = id_tache;
     }
 
-    public Integer getId_marche() {
-        return id_marche;
+    public Marche getMarche() {
+        return marche;
     }
 
-    public void setId_marche(Integer id_marche) {
-        this.id_marche = id_marche;
+    public void setMarche(Marche marche) {
+        this.marche = marche;
     }
 
     public String getTitre() {
@@ -130,11 +152,11 @@ public class Tache {
         this.duree_estimee = duree_estimee;
     }
 
-    public Integer getResponsable() {
+    public Employe getResponsable() {
         return responsable;
     }
 
-    public void setResponsable(Integer responsable) {
+    public void setResponsable(Employe responsable) {
         this.responsable = responsable;
     }
 

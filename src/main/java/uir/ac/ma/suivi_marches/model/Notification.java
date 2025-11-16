@@ -1,10 +1,13 @@
 package uir.ac.ma.suivi_marches.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "notification")
 public class Notification {
@@ -15,14 +18,18 @@ public class Notification {
     private Integer id_notification;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_employe", nullable = false, foreignKey = @ForeignKey(name = "fk_notification_employe"))
+    @JoinColumn(
+            name = "id_employe",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_notification_employe")
+    )
     private Employe employe;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
     private Type type;
 
-    @Column(name = "message", nullable = false, length = 1000)
+    @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
 
     @Column(name = "lu", nullable = false)
@@ -38,7 +45,6 @@ public class Notification {
         APPROBATION,
         AUTRE
     }
-
     public Notification() {
     }
 
